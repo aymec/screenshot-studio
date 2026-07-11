@@ -3,9 +3,9 @@ import iphoneFrame from './assets/iphone-frame.png'
 /**
  * Geometry of an App Store screenshot panel. Every rect is in canvas pixels.
  *
- * The iPhone 6.5" values below are measured from the original GIMP template
- * this tool replaces: canvas 1242x2688, frame layer 1087x2189 at
- * (78,483), screenshot layer 946x2054 at (148,546).
+ * The iPhone 6.5" values below are the App Store's 6.5" display size: canvas 1242x2688,
+ * with the frame at (78,483) sized 1087x2189 and the screenshot at (148,546) sized
+ * 946x2054 — the rects the bundled frame asset was drawn against.
  */
 export interface DevicePreset {
   id: string
@@ -32,10 +32,10 @@ export const IPHONE_65: DevicePreset = {
 export const PRESETS = [IPHONE_65]
 
 /**
- * `system` is what the original template used (SF Pro Display on Apple platforms) and
- * matches the source template to within 0.3%. It renders differently off
- * Apple platforms, so `Inter` is bundled as the portable choice: it is embedded in the
- * app, so its exports are byte-identical on any machine.
+ * `system` resolves to SF Pro Display on Apple platforms, which is the face App Store
+ * captions are usually set in. It renders differently off Apple platforms, so `Inter` is
+ * bundled as the portable choice: it is embedded in the app, so its exports are
+ * byte-identical on any machine.
  */
 export const FONTS = [
   { id: 'system', label: 'System (SF Pro)', stack: 'system-ui, -apple-system, sans-serif' },
@@ -59,9 +59,9 @@ export interface Design {
 }
 
 /**
- * The starting design. Colors, size and line-height come from the source
- * template (ink height 90px, baselines 154px apart => ~119px / 1.32); the caption is a
- * neutral placeholder for whatever app the user is making screenshots for.
+ * The starting design: a caption sized to fill the band above the phone (~119px, 1.32
+ * line-height) with a neutral placeholder sentence for whatever app the user is making
+ * screenshots for.
  */
 export const DEFAULT_DESIGN: Design = {
   backgroundColor: '#001027',

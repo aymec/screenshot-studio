@@ -24,8 +24,8 @@ depends on there being exactly one.
 
 ## Layout invariants
 
-Geometry lives in `src/template.ts` (`DevicePreset`) and was measured from the GIMP template this
-tool replaces. Changing these numbers changes the output, so change them deliberately:
+Geometry lives in `src/template.ts` (`DevicePreset`) and is what the bundled frame asset was
+drawn against. Changing these numbers changes the output, so change them deliberately:
 
 - Canvas 1242 × 2688; frame 1087 × 2189 at (78, 483); screen 946 × 2054 at (148, 546).
 - `screen.radius` is **140**. It must exceed the frame PNG's screen aperture (~135px) or the

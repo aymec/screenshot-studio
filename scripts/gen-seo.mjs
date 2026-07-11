@@ -55,9 +55,9 @@ writeFileSync(
 > ready-to-upload 1242x2688 PNG. It runs entirely client-side: no account, no backend, and
 > no image ever leaves the browser.
 
-Screenshot Studio replaces the usual Photoshop/GIMP template workflow for producing the
-marketing screenshots that Apple requires on an App Store listing. The panel is rendered on
-an HTML canvas at full export resolution, so the on-screen preview is exactly the file you
+Screenshot Studio produces the marketing screenshots that Apple requires on an App Store
+listing, without an image editor or a design template. The panel is rendered on an HTML
+canvas at full export resolution, so the on-screen preview is exactly the file you
 download.
 
 ## What you can control

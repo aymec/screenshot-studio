@@ -6,10 +6,9 @@
  * Any change to the geometry, caption layout, font metrics, corner masking or layer order
  * shows up here as a pixel difference.
  *
- * The geometry this locks in (canvas 1242x2688; frame 1087x2189 at 78,483; screen
- * 946x2054 at 148,546; caption centered in the band above the phone) was originally derived
- * from — and validated pixel-for-pixel against — the GIMP template this tool replaces.
- * The golden preserves that result without vendoring anyone's app screenshots.
+ * The golden pins the panel's geometry: canvas 1242x2688; frame 1087x2189 at (78,483);
+ * screen 946x2054 at (148,546); caption centered in the band above the phone. The fixture
+ * is synthetic, so the repo vendors no third-party app screenshots.
  *
  * Usage: npm run dev  (in one shell)
  *        node scripts/verify-render.mjs            # check

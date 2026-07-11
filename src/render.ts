@@ -9,9 +9,9 @@ interface Line {
 const fontOf = (d: Design) => `${d.fontWeight} ${d.fontSize}px ${d.fontFamily}`
 
 /**
- * Lay the sentence out into lines. Explicit newlines are honored as hard breaks (the
- * source GIMP template broke its two-line caption by hand); any hard line that
- * still overflows is greedy-wrapped to the caption's max width.
+ * Lay the sentence out into lines. Explicit newlines are honored as hard breaks, so a
+ * caption can be broken exactly where the author wants; any hard line that still
+ * overflows is greedy-wrapped to the caption's max width.
  *
  * Tokens carry their own `spaceBefore`, so Japanese and Chinese — which have word
  * boundaries but no spaces — are wrapped per word without spaces being injected.
@@ -127,9 +127,9 @@ export interface RenderInput {
 }
 
 /**
- * Draw the whole panel. Layer order mirrors the GIMP template: background, then
- * the screenshot (clipped to rounded corners), then the phone frame on top so its
- * bezel overlaps the screenshot, then the caption.
+ * Draw the whole panel, bottom-up: background, then the screenshot (clipped to rounded
+ * corners), then the phone frame on top so its bezel overlaps the screenshot, then the
+ * caption.
  */
 export function render(ctx: CanvasRenderingContext2D, input: RenderInput) {
   const { preset, design, screenshot, frame } = input

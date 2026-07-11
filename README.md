@@ -6,9 +6,6 @@ ready-to-upload PNG. No backend, no account — nothing ever leaves the browser.
 
 Live at [screenshot-studio.aymeric.fyi](https://screenshot-studio.aymeric.fyi).
 
-It replaces the usual "hand-edit a Photoshop/GIMP template for every screenshot" workflow; this
-project began as a port of exactly such a GIMP template, whose geometry it reproduces.
-
 ## The template
 
 A panel is a 1242 × 2688 iPhone 6.5" canvas with four layers, drawn bottom-up:
