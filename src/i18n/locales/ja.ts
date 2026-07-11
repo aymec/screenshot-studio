@@ -1,0 +1,60 @@
+import type { Dict } from './en'
+
+export const ja: Dict = {
+  brandSubtitle: 'App Store 用画像 · 1242 × 2688',
+  about: '概要',
+  light: 'ライト',
+  dark: 'ダーク',
+  closeControls: '設定を閉じる',
+  showControls: '設定を表示',
+  switchToLight: 'ライトモードに切り替える',
+  switchToDark: 'ダークモードに切り替える',
+
+  screenshot: 'スクリーンショット',
+  dropImage: 'クリックまたは画像をドロップ',
+  replaceImage: '画像を差し替える',
+
+  caption: 'キャプション',
+  captionHint: 'Enter キーで改行できます。',
+  highlightedWords: '強調する単語',
+  noWords: '単語がありません',
+
+  backgroundColor: '背景色',
+  highlightColor: '強調色',
+  textColor: '文字色',
+
+  font: 'フォント',
+  fontSystem: 'システム (SF Pro)',
+  fontInter: 'Inter (どの環境でも同じ)',
+  language: '言語',
+
+  size: 'サイズ — {{value}}px',
+  weight: '太さ — {{value}}',
+  lineHeight: '行の高さ — {{value}}',
+
+  exportPng: 'PNG を書き出す',
+  reset: 'テンプレートの初期値に戻す',
+
+  aboutTitle: 'このサイトについて',
+  closeInfo: '説明を閉じる',
+  modalTagline: 'App Store 用のマーケティング画像をブラウザーで作成できます。',
+  modalIntro:
+    'スマートフォンやシミュレーターのスクリーンショットを iPhone のフレームに入れ、1 語を強調したキャプションを添えて、そのままアップロードできる 1242 × 2688 の PNG（App Store の 6.5 インチ用サイズ）を書き出せます。すべてブラウザー内で処理され、画像がどこかに送信されることはありません。',
+
+  step1Title: 'スクリーンショットを追加',
+  step1Body:
+    'ドロップ領域をクリックするか、画像をドラッグしてください。画面いっぱいに拡大され中央でトリミングされるため、どのサイズでも使えます。',
+  step2Title: 'キャプションを入力',
+  step2Body: 'Enter キーで改行できます。端末の上の余白の中央に配置されます。',
+  step3Title: '強調する単語を選ぶ',
+  step3Body: '単語をタップすると強調色になります。もう一度タップすると解除されます。',
+  step4Title: '色と文字を設定',
+  step4Body: '背景色・強調色・文字色に加えて、フォント、サイズ、太さ、行の高さを調整できます。',
+  step5Title: '書き出す',
+  step5Body:
+    'プレビューはフル解像度の実際のキャンバスなので、ダウンロードされる PNG は見たままです。',
+
+  modalFootnote:
+    '設定はこのブラウザーに保存され、次回も復元されます。画像は保存されないため、再読み込み後にもう一度ドロップしてください。',
+  gotIt: 'わかりました',
+}
