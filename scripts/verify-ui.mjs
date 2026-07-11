@@ -7,17 +7,9 @@
  *        node scripts/verify-ui.mjs
  */
 import puppeteer from 'puppeteer-core'
-import { mkdirSync, copyFileSync, existsSync } from 'node:fs'
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-
-// Provision our own fixture: `prebuild` deletes public/__parity so test images never ship,
-// which means we cannot assume a previous script left it behind.
-const SOURCE = 'public/__parity/source.png'
-if (!existsSync(SOURCE)) {
-  mkdirSync('public/__parity', { recursive: true })
-  copyFileSync('/Users/aymc/projects/habit-tracker/assets/screenshots/ios_en_1_home.PNG', SOURCE)
-}
+const SOURCE = 'tests/fixtures/sample-screenshot.png'
 const browser = await puppeteer.launch({
   executablePath: CHROME,
   headless: true,
@@ -72,7 +64,7 @@ check('caption plain text is drawn', whitePx > 500, `${whitePx} white px in the 
 
 // 2. Image upload lands inside the phone screen.
 const before = await pixel(620, 1500)
-await (await page.$('input[type=file]')).uploadFile('public/__parity/source.png')
+await (await page.$('input[type=file]')).uploadFile(SOURCE)
 // Wait for real image pixels: the empty-state placeholder is already != background,
 // so "not the background color" would be true before the upload even lands.
 await page.waitForFunction(
@@ -191,14 +183,14 @@ check('toggling another word on re-applies the highlight', afterOn > 500, `${aft
 await page.evaluate(() => {
   const ta = document.querySelector('textarea')
   const setter = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set
-  setter.call(ta, 'Track every\nsingle habit')
+  setter.call(ta, 'Track every\nsingle metric')
   ta.dispatchEvent(new Event('input', { bubbles: true }))
 })
 await new Promise((r) => setTimeout(r, 300))
 const words = await page.$$eval('[data-word-chip]', (bs) =>
   bs.map((b) => b.textContent).filter((t) => !t.includes('Export') && !t.includes('Reset')),
 )
-check('caption edit refreshes word chips', words.join(' ') === 'Track every single habit', words.join(' '))
+check('caption edit refreshes word chips', words.join(' ') === 'Track every single metric', words.join(' '))
 
 // 6. Export produces a real 1242x2688 PNG.
 const png = await page.evaluate(() => document.querySelector('canvas').toDataURL('image/png'))

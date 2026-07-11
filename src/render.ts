@@ -10,7 +10,7 @@ const fontOf = (d: Design) => `${d.fontWeight} ${d.fontSize}px ${d.fontFamily}`
 
 /**
  * Lay the sentence out into lines. Explicit newlines are honored as hard breaks (the
- * original GIMP template broke "OnTrack" / "Habit Tracker" by hand); any hard line that
+ * source GIMP template broke its two-line caption by hand); any hard line that
  * still overflows is greedy-wrapped to the caption's max width.
  *
  * Tokens carry their own `spaceBefore`, so Japanese and Chinese — which have word

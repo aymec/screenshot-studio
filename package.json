@@ -8,10 +8,11 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "verify": "node scripts/verify-parity.mjs",
+    "verify": "node scripts/verify-render.mjs",
     "seo": "node scripts/gen-seo.mjs",
     "predev": "npm run seo",
-    "prebuild": "node -e \"require('fs').rmSync('public/__parity',{recursive:true,force:true})\" && npm run seo"
+    "prebuild": "npm run seo",
+    "fixture": "node scripts/gen-fixture.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
