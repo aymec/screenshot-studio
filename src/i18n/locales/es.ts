@@ -15,6 +15,16 @@ export const es: Dict = {
   dropImage: 'Haz clic o suelta una imagen',
   replaceImage: 'Reemplazar imagen',
 
+  screenshots: 'Capturas de pantalla',
+  screenshotN: 'Captura de pantalla {{n}}',
+  previousScreenshot: 'Captura de pantalla anterior',
+  nextScreenshot: 'Captura de pantalla siguiente',
+  addScreenshot: 'Añadir captura de pantalla',
+  deleteScreenshot: 'Eliminar la captura de pantalla {{n}}',
+  deleteScreenshotBody: 'Su imagen, su texto y sus colores se van con ella. Esta acción no se puede deshacer.',
+  yes: 'Sí',
+  no: 'No',
+
   caption: 'Texto',
   captionHint: 'Pulsa Intro para saltar de línea.',
   highlightedWords: 'Palabras destacadas',
@@ -34,6 +44,8 @@ export const es: Dict = {
   lineHeight: 'Interlineado — {{value}}',
 
   exportPng: 'Exportar PNG',
+  exportAll: 'Exportar todo',
+  exporting: 'Exportando…',
   reset: 'Restablecer la plantilla',
 
   aboutTitle: 'Acerca de este sitio',
@@ -54,11 +66,14 @@ export const es: Dict = {
   step4Title: 'Ajusta los colores y la tipografía.',
   step4Body:
     'Colores de fondo, de resalte y del texto, además de la fuente, el tamaño, el grosor y el interlineado.',
-  step5Title: 'Exporta.',
+  step5Title: 'Crea el conjunto.',
   step5Body:
-    'La vista previa es el lienzo real a resolución completa, así que el PNG que descargas es exactamente lo que ves.',
+    'Añade hasta 10 capturas por dispositivo con el + bajo la vista previa y cambia entre ellas con los círculos numerados. Cada una conserva su imagen, su texto, sus colores y su tipografía.',
+  step6Title: 'Exporta.',
+  step6Body:
+    'La vista previa es el lienzo real a resolución completa, así que el PNG que descargas es exactamente lo que ves. Exporta la captura que tienes delante o todo el conjunto de una vez.',
 
   modalFootnote:
-    'Tus ajustes se guardan en este navegador y se restauran la próxima vez. La imagen no: vuelve a soltarla tras recargar.',
+    'Tus ajustes se guardan en este navegador y se restauran la próxima vez. Las imágenes no: vuelve a soltarlas tras recargar.',
   gotIt: 'Entendido',
 }

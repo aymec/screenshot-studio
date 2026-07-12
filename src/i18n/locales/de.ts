@@ -15,6 +15,16 @@ export const de: Dict = {
   dropImage: 'Bild anklicken oder hierher ziehen',
   replaceImage: 'Bild ersetzen',
 
+  screenshots: 'Screenshots',
+  screenshotN: 'Screenshot {{n}}',
+  previousScreenshot: 'Vorheriger Screenshot',
+  nextScreenshot: 'Nächster Screenshot',
+  addScreenshot: 'Screenshot hinzufügen',
+  deleteScreenshot: 'Screenshot {{n}} löschen',
+  deleteScreenshotBody: 'Bild, Text und Farben verschwinden mit ihm. Das lässt sich nicht rückgängig machen.',
+  yes: 'Ja',
+  no: 'Nein',
+
   caption: 'Text',
   captionHint: 'Drücke die Eingabetaste für einen Zeilenumbruch.',
   highlightedWords: 'Hervorgehobene Wörter',
@@ -34,6 +44,8 @@ export const de: Dict = {
   lineHeight: 'Zeilenhöhe — {{value}}',
 
   exportPng: 'PNG exportieren',
+  exportAll: 'Alle exportieren',
+  exporting: 'Wird exportiert…',
   reset: 'Auf Vorlage zurücksetzen',
 
   aboutTitle: 'Über diese Website',
@@ -54,11 +66,14 @@ export const de: Dict = {
   step4Title: 'Farben und Schrift einstellen.',
   step4Body:
     'Hintergrund-, Akzent- und Textfarbe sowie Schriftart, Größe, Schriftstärke und Zeilenhöhe.',
-  step5Title: 'Exportieren.',
+  step5Title: 'Die ganze Serie aufbauen.',
   step5Body:
-    'Die Vorschau ist die echte Leinwand in voller Auflösung — das heruntergeladene PNG ist genau das, was du siehst.',
+    'Füge mit dem + unter der Vorschau bis zu 10 Screenshots pro Gerät hinzu und wechsle mit den nummerierten Kreisen zwischen ihnen. Jeder behält sein eigenes Bild, seinen Text, seine Farben und seine Schrift.',
+  step6Title: 'Exportieren.',
+  step6Body:
+    'Die Vorschau ist die echte Leinwand in voller Auflösung — das heruntergeladene PNG ist genau das, was du siehst. Exportiere den angezeigten Screenshot oder gleich die ganze Serie.',
 
   modalFootnote:
-    'Deine Einstellungen werden in diesem Browser gespeichert und beim nächsten Mal wiederhergestellt. Das Bild nicht — zieh es nach einem Neuladen erneut hinein.',
+    'Deine Einstellungen werden in diesem Browser gespeichert und beim nächsten Mal wiederhergestellt. Die Bilder nicht — zieh sie nach einem Neuladen erneut hinein.',
   gotIt: 'Alles klar',
 }

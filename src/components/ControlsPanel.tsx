@@ -12,7 +12,13 @@ interface Props {
   onChange: (patch: Partial<Design>) => void
   onImage: (file: File) => void
   onExport: () => void
+  onExportAll: () => void
+  /** False when not one screenshot in the deck has an image: there is nothing to put in the zip. */
+  canExportAll: boolean
   onReset: () => void
+  /** Everything in the panel edits screenshot `index` of the device's `count` screenshots. */
+  count: number
+  index: number
   hasImage: boolean
   imageName: string | null
   /** Only meaningful below `lg`, where the panel is a slide-over. */
@@ -42,9 +48,13 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 /**
- * Same look as Field, but a plain div. The file input must NOT live inside a <label>:
- * the label would forward the click to the input on top of our own click() call, and the
- * OS file picker would open twice.
+ * Same look as Field, but a plain div — for anything that is not one single control.
+ *
+ * A <label> forwards a click anywhere inside it, including the dead space beside the control, to
+ * the first control it contains. Around a row of word chips that silently toggles the first word;
+ * around a color row it pops the OS color picker; and around the file input it would open the file
+ * picker twice, once from the label and once from our own click(). None of that is a click the
+ * user made, so these blocks are divs and their controls carry their own accessible names.
  */
 function Section({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -55,18 +65,28 @@ function Section({ label, children }: { label: string; children: React.ReactNode
   )
 }
 
-function ColorInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function ColorInput({
+  value,
+  label,
+  onChange,
+}: {
+  value: string
+  label: string
+  onChange: (v: string) => void
+}) {
   return (
     <div className="flex items-center gap-2">
       <input
         type="color"
         value={value}
+        aria-label={label}
         onChange={(e) => onChange(e.target.value.toUpperCase())}
         className="h-9 w-12 cursor-pointer rounded border border-slate-300 bg-white p-1 dark:border-slate-700 dark:bg-slate-800"
       />
       <input
         type="text"
         value={value}
+        aria-label={`${label} (hex)`}
         onChange={(e) => onChange(e.target.value.toUpperCase())}
         className={`w-28 px-2 py-1.5 font-mono text-sm ${control}`}
       />
@@ -193,7 +213,11 @@ export function ControlsPanel({
   onChange,
   onImage,
   onExport,
+  onExportAll,
+  canExportAll,
   onReset,
+  count,
+  index,
   hasImage,
   imageName,
   open,
@@ -216,7 +240,7 @@ export function ControlsPanel({
 
   return (
     <aside
-      className={`fixed inset-y-0 right-0 z-20 flex w-[min(22.5rem,88vw)] flex-col gap-5 overflow-y-auto border-l border-slate-200 bg-white p-5 pb-28 shadow-2xl transition-transform duration-300 ease-out lg:static lg:z-auto lg:w-90 lg:shrink-0 lg:translate-x-0 lg:pb-5 lg:shadow-none dark:border-slate-800 dark:bg-slate-900 ${
+      className={`fixed inset-y-0 right-0 z-20 flex w-[min(22.5rem,88vw)] flex-col gap-5 overflow-y-auto border-l border-slate-200 bg-white p-5 shadow-2xl transition-transform duration-300 ease-out lg:static lg:z-auto lg:w-90 lg:shrink-0 lg:translate-x-0 lg:shadow-none dark:border-slate-800 dark:bg-slate-900 ${
         open ? 'translate-x-0' : 'translate-x-full'
       }`}
     >
@@ -278,7 +302,8 @@ export function ControlsPanel({
         </select>
       </Field>
 
-      <Section label={t('screenshot')}>
+      {/* Every control below this point edits the selected screenshot, so the panel names it. */}
+      <Section label={count > 1 ? t('screenshotN', { n: index + 1 }) : t('screenshot')}>
         <div
           onClick={() => fileRef.current?.click()}
           onDragOver={(e) => e.preventDefault()}
@@ -300,7 +325,13 @@ export function ControlsPanel({
           type="file"
           accept="image/*"
           className="hidden"
-          onChange={(e) => pickFile(e.target.files)}
+          // Clearing the value is what lets the same file be picked twice — putting one capture
+          // on two screenshots is ordinary here. Without it the second pick leaves the input's
+          // value untouched, no change event fires, and the click appears to do nothing.
+          onChange={(e) => {
+            pickFile(e.target.files)
+            e.target.value = ''
+          }}
         />
       </Section>
 
@@ -316,7 +347,7 @@ export function ControlsPanel({
         </span>
       </Field>
 
-      <Field label={t('highlightedWords')}>
+      <Section label={t('highlightedWords')}>
         <div className="flex flex-wrap gap-1.5">
           {wordList.length === 0 && (
             <span className="text-sm text-slate-500 dark:text-slate-400">{t('noWords')}</span>
@@ -347,21 +378,30 @@ export function ControlsPanel({
             )
           })}
         </div>
-      </Field>
+      </Section>
 
       <div className="grid grid-cols-1 gap-4">
-        <Field label={t('backgroundColor')}>
+        <Section label={t('backgroundColor')}>
           <ColorInput
             value={design.backgroundColor}
+            label={t('backgroundColor')}
             onChange={(v) => onChange({ backgroundColor: v })}
           />
-        </Field>
-        <Field label={t('highlightColor')}>
-          <ColorInput value={design.highlightColor} onChange={(v) => onChange({ highlightColor: v })} />
-        </Field>
-        <Field label={t('textColor')}>
-          <ColorInput value={design.textColor} onChange={(v) => onChange({ textColor: v })} />
-        </Field>
+        </Section>
+        <Section label={t('highlightColor')}>
+          <ColorInput
+            value={design.highlightColor}
+            label={t('highlightColor')}
+            onChange={(v) => onChange({ highlightColor: v })}
+          />
+        </Section>
+        <Section label={t('textColor')}>
+          <ColorInput
+            value={design.textColor}
+            label={t('textColor')}
+            onChange={(v) => onChange({ textColor: v })}
+          />
+        </Section>
       </div>
 
       <Field label={t('font')}>
@@ -421,6 +461,18 @@ export function ControlsPanel({
         >
           {t('exportPng')}
         </button>
+        {/* Only worth its own button once there is more than one screenshot to export. It hands
+            back one zip, so it stays a single click no matter how big the deck is. */}
+        {count > 1 && (
+          <button
+            data-export-all
+            onClick={onExportAll}
+            disabled={!canExportAll}
+            className="w-full rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-transparent disabled:text-slate-500 dark:border-blue-500 dark:text-blue-300 dark:hover:bg-blue-950 dark:disabled:border-slate-700 dark:disabled:text-slate-400"
+          >
+            {t('exportAll')}
+          </button>
+        )}
         <button
           onClick={onReset}
           className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"

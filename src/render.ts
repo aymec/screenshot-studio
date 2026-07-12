@@ -169,14 +169,25 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
   })
 }
 
-export function exportPng(canvas: HTMLCanvasElement, filename: string) {
-  canvas.toBlob((blob) => {
-    if (!blob) return
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    a.click()
-    URL.revokeObjectURL(url)
-  }, 'image/png')
+/**
+ * The PNG of whatever is currently on the canvas. Awaiting a blob rather than downloading one is
+ * what lets a caller collect a whole deck by rendering each screenshot into this same canvas in
+ * turn — still one canvas, still one render path.
+ */
+export function toPng(canvas: HTMLCanvasElement): Promise<Blob | null> {
+  return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
+}
+
+export function download(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+export async function exportPng(canvas: HTMLCanvasElement, filename: string) {
+  const blob = await toPng(canvas)
+  if (blob) download(blob, filename)
 }

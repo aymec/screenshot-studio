@@ -179,6 +179,44 @@ await new Promise((r) => setTimeout(r, 300))
 const afterOn = await bandCount('#007AFF')
 check('toggling another word on re-applies the highlight', afterOn > 500, `${afterOn} highlight px`)
 
+// 4b. The dead space beside a control is not part of that control. These blocks used to be
+//     wrapped in a <label>, which forwards a click from anywhere inside it to the first control
+//     it holds: clicking to the right of the word chips toggled the first word, and clicking to
+//     the right of a color row popped the OS color picker.
+const strayClicks = await page.evaluate(async () => {
+  const heading = (text) =>
+    [...document.querySelectorAll('aside span')].find((s) => s.textContent === text)?.parentElement
+
+  let reached = 0
+  for (const input of document.querySelectorAll('aside input[type=color]')) {
+    input.addEventListener('click', (e) => {
+      reached++
+      e.preventDefault() // never open a real OS color picker in a test
+    })
+  }
+  const before = document.querySelectorAll('[data-word-chip][style]').length
+
+  const out = []
+  for (const label of ['Highlighted words', 'Background color', 'Highlight color', 'Text color']) {
+    const block = heading(label)
+    const r = block.getBoundingClientRect()
+    // 8px in from the block's right edge, on the row of controls: inside the block, but well
+    // clear of any control in it.
+    const x = r.right - 8
+    const y = r.bottom - 12
+    const hit = document.elementFromPoint(x, y)
+    if (hit?.closest('button, input')) out.push(`${label}: a control reaches ${Math.round(x)},${Math.round(y)}`)
+    hit?.click()
+  }
+
+  await new Promise((r) => setTimeout(r, 100))
+  const after = document.querySelectorAll('[data-word-chip][style]').length
+  return { reached, toggled: before !== after, out }
+})
+check('clicking beside a color row does not open the picker', strayClicks.reached === 0, `${strayClicks.reached} clicks reached a color input`)
+check('clicking beside the word chips does not toggle a word', !strayClicks.toggled)
+check('no control is hit-testable in that dead space', strayClicks.out.length === 0, strayClicks.out.join(' | ') || 'clean')
+
 // 5. Caption edit re-wraps.
 await page.evaluate(() => {
   const ta = document.querySelector('textarea')

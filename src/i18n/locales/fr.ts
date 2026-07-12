@@ -15,6 +15,16 @@ export const fr: Dict = {
   dropImage: 'Cliquez ou déposez une image',
   replaceImage: 'Remplacer l’image',
 
+  screenshots: 'Captures d’écran',
+  screenshotN: 'Capture d’écran {{n}}',
+  previousScreenshot: 'Capture d’écran précédente',
+  nextScreenshot: 'Capture d’écran suivante',
+  addScreenshot: 'Ajouter une capture d’écran',
+  deleteScreenshot: 'Supprimer la capture d’écran {{n}}',
+  deleteScreenshotBody: 'Son image, sa légende et ses couleurs disparaissent avec elle. Cette action est irréversible.',
+  yes: 'Oui',
+  no: 'Non',
+
   caption: 'Légende',
   captionHint: 'Appuyez sur Entrée pour aller à la ligne.',
   highlightedWords: 'Mots mis en avant',
@@ -34,6 +44,8 @@ export const fr: Dict = {
   lineHeight: 'Interligne — {{value}}',
 
   exportPng: 'Exporter en PNG',
+  exportAll: 'Tout exporter',
+  exporting: 'Exportation…',
   reset: 'Réinitialiser le modèle',
 
   aboutTitle: 'À propos de ce site',
@@ -54,11 +66,14 @@ export const fr: Dict = {
   step4Title: 'Réglez les couleurs et la typographie.',
   step4Body:
     'Couleurs de fond, de mise en avant et du texte, ainsi que la police, la taille, la graisse et l’interligne.',
-  step5Title: 'Exportez.',
+  step5Title: 'Composez la série.',
   step5Body:
-    'L’aperçu est le vrai canevas en pleine résolution : le PNG téléchargé est exactement ce que vous voyez.',
+    'Ajoutez jusqu’à 10 captures d’écran par appareil avec le + sous l’aperçu, et passez de l’une à l’autre avec les pastilles numérotées. Chacune garde son image, sa légende, ses couleurs et sa typographie.',
+  step6Title: 'Exportez.',
+  step6Body:
+    'L’aperçu est le vrai canevas en pleine résolution : le PNG téléchargé est exactement ce que vous voyez. Exportez la capture affichée, ou toute la série d’un coup.',
 
   modalFootnote:
-    'Vos réglages sont enregistrés dans ce navigateur et restaurés à la prochaine visite. L’image, non — déposez-la à nouveau après un rechargement.',
+    'Vos réglages sont enregistrés dans ce navigateur et restaurés à la prochaine visite. Les images, non — déposez-les à nouveau après un rechargement.',
   gotIt: 'J’ai compris',
 }

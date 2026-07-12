@@ -86,7 +86,17 @@ const visible = (page, sel) =>
     const r = el.getBoundingClientRect()
     return { bottomGap: Math.round(innerHeight - r.bottom), rightGap: Math.round(innerWidth - r.right) }
   })
-  check('mobile: burger sits bottom-right', fabPos.bottomGap < 40 && fabPos.rightGap < 40, `${fabPos.rightGap}px from right, ${fabPos.bottomGap}px from bottom`)
+  check('mobile: burger sits on the right', fabPos.rightGap < 40, `${fabPos.rightGap}px from right`)
+
+  // It floats above the screenshot strip rather than beside it, so the preview and the chips get
+  // the full width. Overlapping the bottom of the preview is fine; overlapping the chips is not.
+  const overStrip = await page.evaluate(() => {
+    const fab = document.querySelector('button[aria-expanded]').getBoundingClientRect()
+    const nav = document.querySelector('nav').getBoundingClientRect()
+    const hits = (a, b) => !(a.bottom <= b.top || a.top >= b.bottom || a.right <= b.left || a.left >= b.right)
+    return { overlaps: hits(fab, nav), gap: Math.round(nav.top - fab.bottom) }
+  })
+  check('mobile: burger clears the screenshot strip', !overStrip.overlaps, `${overStrip.gap}px above the chips`)
 
   // Open it.
   await page.click('button[aria-expanded]')

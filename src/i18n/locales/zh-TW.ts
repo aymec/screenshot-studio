@@ -15,6 +15,16 @@ export const zhTW: Dict = {
   dropImage: '點擊或拖曳圖片',
   replaceImage: '更換圖片',
 
+  screenshots: '螢幕截圖',
+  screenshotN: '螢幕截圖 {{n}}',
+  previousScreenshot: '上一張螢幕截圖',
+  nextScreenshot: '下一張螢幕截圖',
+  addScreenshot: '新增螢幕截圖',
+  deleteScreenshot: '刪除螢幕截圖 {{n}}',
+  deleteScreenshotBody: '它的圖片、文案與顏色都會一併刪除，且無法復原。',
+  yes: '是',
+  no: '否',
+
   caption: '文案',
   captionHint: '按 Enter 鍵換行。',
   highlightedWords: '強調的字詞',
@@ -34,6 +44,8 @@ export const zhTW: Dict = {
   lineHeight: '行高 — {{value}}',
 
   exportPng: '匯出 PNG',
+  exportAll: '全部匯出',
+  exporting: '正在匯出…',
   reset: '還原範本預設值',
 
   aboutTitle: '關於本站',
@@ -51,8 +63,12 @@ export const zhTW: Dict = {
   step3Body: '點一下任一字詞即可套用強調顏色，再點一次即可取消。',
   step4Title: '設定顏色與字體。',
   step4Body: '背景色、強調色與文字顏色，以及字體、字級、字重和行高。',
-  step5Title: '匯出。',
-  step5Body: '預覽就是全解析度的實際畫布，因此下載的 PNG 與你所見完全一致。',
+  step5Title: '做成一整組。',
+  step5Body:
+    '用預覽下方的 + 為每個裝置新增最多 10 張截圖，並用有編號的圓點在它們之間切換。每一張都保有各自的圖片、文案、顏色與字體。',
+  step6Title: '匯出。',
+  step6Body:
+    '預覽就是全解析度的實際畫布，因此下載的 PNG 與你所見完全一致。可以只匯出目前這張，也可以一次匯出整組。',
 
   modalFootnote:
     '設定會儲存在這個瀏覽器中，下次會自動還原。圖片不會儲存 —— 重新載入後請再拖入一次。',

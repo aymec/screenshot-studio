@@ -77,6 +77,10 @@ export const PRESETS = [IPHONE_65, IPAD_13, ANDROID_PHONE, ANDROID_TABLET]
 
 export const DEFAULT_PRESET = IPHONE_65
 
+/** Both stores stop accepting screenshots past the tenth, so there is no point authoring an
+ *  eleventh: the strip's "add" chip is gone once a device holds this many. */
+export const MAX_SCREENSHOTS = 10
+
 export const presetById = (id: string) => PRESETS.find((p) => p.id === id) ?? DEFAULT_PRESET
 
 /**

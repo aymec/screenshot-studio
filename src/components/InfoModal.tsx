@@ -57,7 +57,7 @@ export function InfoModal({ open, onClose, t }: Props) {
         </p>
 
         <ol className="mt-5 space-y-3">
-          {([1, 2, 3, 4, 5] as const).map((n) => (
+          {([1, 2, 3, 4, 5, 6] as const).map((n) => (
             <Step key={n} n={n} title={t(`step${n}Title` as TKey)}>
               {t(`step${n}Body` as TKey)}
             </Step>

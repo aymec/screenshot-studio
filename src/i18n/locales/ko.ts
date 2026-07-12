@@ -15,6 +15,16 @@ export const ko: Dict = {
   dropImage: '클릭하거나 이미지를 끌어다 놓으세요',
   replaceImage: '이미지 교체',
 
+  screenshots: '스크린샷',
+  screenshotN: '스크린샷 {{n}}',
+  previousScreenshot: '이전 스크린샷',
+  nextScreenshot: '다음 스크린샷',
+  addScreenshot: '스크린샷 추가',
+  deleteScreenshot: '스크린샷 {{n}} 삭제',
+  deleteScreenshotBody: '이미지와 문구, 색상도 함께 사라집니다. 되돌릴 수 없습니다.',
+  yes: '예',
+  no: '아니요',
+
   caption: '문구',
   captionHint: 'Enter 키를 누르면 줄이 바뀝니다.',
   highlightedWords: '강조할 단어',
@@ -34,6 +44,8 @@ export const ko: Dict = {
   lineHeight: '줄 간격 — {{value}}',
 
   exportPng: 'PNG 내보내기',
+  exportAll: '전체 내보내기',
+  exporting: '내보내는 중…',
   reset: '템플릿 기본값으로 되돌리기',
 
   aboutTitle: '이 사이트 소개',
@@ -51,9 +63,12 @@ export const ko: Dict = {
   step3Body: '단어를 누르면 강조색이 적용됩니다. 다시 누르면 해제됩니다.',
   step4Title: '색상과 서체 설정하기',
   step4Body: '배경색, 강조색, 글자색과 함께 글꼴, 크기, 굵기, 줄 간격을 조정할 수 있습니다.',
-  step5Title: '내보내기',
+  step5Title: '세트 만들기',
   step5Body:
-    '미리보기는 전체 해상도의 실제 캔버스이므로 내려받는 PNG는 보이는 그대로입니다.',
+    '미리보기 아래의 + 로 기기마다 최대 10장까지 추가하고, 번호가 매겨진 칩으로 전환하세요. 이미지, 문구, 색상, 글꼴은 스크린샷마다 따로 저장됩니다.',
+  step6Title: '내보내기',
+  step6Body:
+    '미리보기는 전체 해상도의 실제 캔버스이므로 내려받는 PNG는 보이는 그대로입니다. 보고 있는 한 장만, 또는 세트 전체를 한 번에 내보낼 수 있습니다.',
 
   modalFootnote:
     '설정은 이 브라우저에 저장되어 다음에도 복원됩니다. 이미지는 저장되지 않으니 새로고침 후 다시 넣어 주세요.',

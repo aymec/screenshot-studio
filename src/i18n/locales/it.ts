@@ -15,6 +15,16 @@ export const it: Dict = {
   dropImage: 'Fai clic o trascina un’immagine',
   replaceImage: 'Sostituisci immagine',
 
+  screenshots: 'Screenshot',
+  screenshotN: 'Screenshot {{n}}',
+  previousScreenshot: 'Screenshot precedente',
+  nextScreenshot: 'Screenshot successivo',
+  addScreenshot: 'Aggiungi screenshot',
+  deleteScreenshot: 'Elimina lo screenshot {{n}}',
+  deleteScreenshotBody: 'La sua immagine, la didascalia e i colori se ne vanno con lui. L’azione non è reversibile.',
+  yes: 'Sì',
+  no: 'No',
+
   caption: 'Didascalia',
   captionHint: 'Premi Invio per andare a capo.',
   highlightedWords: 'Parole evidenziate',
@@ -34,6 +44,8 @@ export const it: Dict = {
   lineHeight: 'Interlinea — {{value}}',
 
   exportPng: 'Esporta PNG',
+  exportAll: 'Esporta tutti',
+  exporting: 'Esportazione…',
   reset: 'Ripristina il modello',
 
   aboutTitle: 'Informazioni su questo sito',
@@ -53,11 +65,14 @@ export const it: Dict = {
   step4Title: 'Imposta i colori e il testo.',
   step4Body:
     'Colori di sfondo, di evidenziazione e del testo, oltre a carattere, dimensione, spessore e interlinea.',
-  step5Title: 'Esporta.',
+  step5Title: 'Costruisci la serie.',
   step5Body:
-    'L’anteprima è la tela reale a piena risoluzione: il PNG che scarichi è esattamente ciò che vedi.',
+    'Aggiungi fino a 10 screenshot per dispositivo con il + sotto l’anteprima e passa dall’uno all’altro con i cerchi numerati. Ognuno mantiene la propria immagine, didascalia, colori e tipografia.',
+  step6Title: 'Esporta.',
+  step6Body:
+    'L’anteprima è la tela reale a piena risoluzione: il PNG che scarichi è esattamente ciò che vedi. Esporta lo screenshot che stai guardando oppure l’intera serie in una volta.',
 
   modalFootnote:
-    'Le tue impostazioni vengono salvate in questo browser e ripristinate alla prossima visita. L’immagine no: trascinala di nuovo dopo un ricaricamento.',
+    'Le tue impostazioni vengono salvate in questo browser e ripristinate alla prossima visita. Le immagini no: trascinale di nuovo dopo un ricaricamento.',
   gotIt: 'Ho capito',
 }
