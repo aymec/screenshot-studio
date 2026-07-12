@@ -9,9 +9,9 @@ export type Store = 'App Store' | 'Google Play'
 /**
  * Geometry of a store screenshot panel. Every rect is in canvas pixels.
  *
- * Each preset's numbers are the layer offsets of the GIMP template it came from, and the
- * bundled frame asset is that template's frame layer exported as-is. Frame and screen rects
- * therefore only make sense together: they were drawn against each other.
+ * A preset's rects and its frame asset were authored against each other, so they only mean
+ * anything together: the frame is drawn at `frame`, and `screen` is the hole in it. Swapping
+ * one without the other misaligns the screenshot with the bezel.
  */
 export interface DevicePreset {
   id: string

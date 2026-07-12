@@ -24,10 +24,10 @@ depends on there being exactly one.
 
 ## Layout invariants
 
-Geometry lives in `src/template.ts` (`DevicePreset`), one preset per device. Each preset's rects
-are the layer offsets of the GIMP template it came from, and its frame asset is that template's
-frame layer exported as-is — so a preset's frame and screen rects only mean anything together.
-Changing these numbers changes the output, so change them deliberately.
+Geometry lives in `src/template.ts` (`DevicePreset`), one preset per device. A preset's rects and
+its bundled frame asset were authored against each other, so they only mean anything together:
+the frame is drawn at `frame`, and `screen` is the hole in it. Changing these numbers changes the
+output, so change them deliberately.
 
 - The four presets: iPhone 6.5" (1242 × 2688), iPad Pro 13" (2064 × 2752), Android phone
   (1512 × 2688), Android tablet (1548 × 2752). The iPhone is the default.
@@ -43,7 +43,7 @@ Changing these numbers changes the output, so change them deliberately.
   aperture. Run it if you touch any geometry.
 - The caption is centered by its **ink box** (`actualBoundingBox*`), not font metrics, within the
   band between the canvas top and the frame. That is what keeps it optically centered across fonts.
-  All four GIMP templates use the same caption size, so `Design.fontSize` is shared, not per-device.
+  The caption is the same size on every device, so `Design.fontSize` is shared, not per-device.
 
 ## Captions are not whitespace-delimited
 
