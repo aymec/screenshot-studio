@@ -7,9 +7,12 @@ the browser.
 
 Live at [screenshot-studio.aymeric.fyi](https://screenshot-studio.aymeric.fyi).
 
-| An exported panel | The editor on a phone |
-| --- | --- |
-| <img src="docs/screenshot-studio-desktop.png" alt="An exported iPad Pro 13&quot; panel: the caption &quot;MyApp is the Best App&quot; over a tablet frame on a navy background" width="420"> | <img src="docs/screenshot-studio-mobile.png" alt="Screenshot Studio on a phone: the live canvas preview, the screenshot strip, and the floating controls button" width="420"> |
+<img src="docs/screenshot-studio-desktop.png" alt="Screenshot Studio on a desktop: the live canvas preview and the screenshot strip on the left, the controls dock on the right">
+
+On a phone the controls collapse behind a floating button, leaving the preview and the strip the
+full width:
+
+<img src="docs/screenshot-studio-mobile.png" alt="Screenshot Studio on a phone: the live canvas preview, the screenshot strip, and the floating controls button" width="320">
 
 ## Devices
 
