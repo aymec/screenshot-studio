@@ -1,28 +1,47 @@
 # Screenshot Studio
 
-A fully client-side generator for App Store marketing screenshots. Drop a raw phone screenshot
-into an iPhone frame, write a caption with one word picked out in a highlight color, and export a
-ready-to-upload PNG. No backend, no account — nothing ever leaves the browser.
+A fully client-side generator for marketing screenshots for the Apple App Store and the Google Play
+Store. Drop a raw phone screenshot into a device frame, write a caption with one word picked out in
+a highlight color, and export a ready-to-upload PNG. No backend, no account — nothing ever leaves
+the browser.
 
 Live at [screenshot-studio.aymeric.fyi](https://screenshot-studio.aymeric.fyi).
 
+## Devices
+
+Four presets, one per listing size the two stores ask for:
+
+| Device | Canvas | Store |
+| --- | --- | --- |
+| iPhone 6.5" (default) | 1242 × 2688 | App Store |
+| iPad Pro 13" | 2064 × 2752 | App Store |
+| Android phone | 1512 × 2688 | Play Store |
+| Android tablet | 1548 × 2752 | Play Store |
+
+Each device keeps its own deck of up to 10 screenshots — the store limit — and each screenshot
+carries its own image, caption and colors, so restyling one leaves the rest alone. Switching device
+swaps the whole deck: a phone capture center-cropped into a tablet's screen is not shippable.
+"Export all" hands back a single zip of the current device's deck, numbered in the order you see on
+the strip.
+
 ## The template
 
-A panel is a 1242 × 2688 iPhone 6.5" canvas with four layers, drawn bottom-up:
+A panel is a device-sized canvas with four layers, drawn bottom-up:
 
 1. **Background** — a flat fill.
-2. **Screenshot** — your uploaded image, aspect-filled and center-cropped into the phone's screen
+2. **Screenshot** — your uploaded image, aspect-filled and center-cropped into the device's screen
    rect, clipped to rounded corners.
-3. **iPhone frame** — a transparent PNG whose bezel overlaps the screenshot.
+3. **Device frame** — a transparent PNG whose bezel overlaps the screenshot.
 4. **Caption** — a short sentence centered in the band between the top of the canvas and the top
-   of the phone, with any words you choose drawn in the highlight color.
+   of the device, with any words you choose drawn in the highlight color.
 
 All the geometry lives in `src/template.ts` (`DevicePreset`), and it is the only thing you need to
-touch to add another device size.
+touch to add another device size. A preset's rects and its bundled frame asset were authored
+against each other, so they only mean anything together.
 
 ## Architecture
 
-The panel is drawn onto a real 1242 × 2688 `<canvas>` by one pure function, `render()` in
+The panel is drawn onto a real, full-size `<canvas>` by one pure function, `render()` in
 `src/render.ts`. The preview you see is that same canvas scaled down with CSS, and export is
 `canvas.toBlob()` — so **the preview is exactly what you export**, with no second rasterizer to
 disagree with the DOM.
@@ -68,12 +87,14 @@ There are no unit tests: everything is verified by driving the real app in headl
 the whole product is a rendering pipeline plus a UI. Start `npm run dev`, then:
 
 ```bash
-npm run verify                     # golden-image regression for the renderer
-node scripts/verify-ui.mjs         # every control, plus the export path
-node scripts/verify-responsive.mjs # desktop/mobile layout and the slide-over panel
-node scripts/verify-theme.mjs      # light/dark, OS default, persistence
-node scripts/verify-i18n.mjs       # all 10 locales, detection, persistence
-node scripts/verify-cjk.mjs        # Japanese/Chinese/Korean caption segmentation
+npm run verify                      # golden-image regression for the renderer
+node scripts/verify-frames.mjs      # every device: canvas size, corner leaks, aperture bleed
+node scripts/verify-ui.mjs          # every control, plus the export path
+node scripts/verify-screenshots.mjs # the deck: chips, the 10 cap, per-slide isolation, export all
+node scripts/verify-responsive.mjs  # desktop/mobile layout and the slide-over panel
+node scripts/verify-theme.mjs       # light/dark, OS default, persistence
+node scripts/verify-i18n.mjs        # all 10 locales, detection, persistence
+node scripts/verify-cjk.mjs         # Japanese/Chinese/Korean caption segmentation
 ```
 
 `npm run verify` renders a panel from `tests/fixtures/sample-screenshot.png` with a fixed design
