@@ -1,5 +1,6 @@
 export const en = {
-  brandSubtitle: 'App Store panel · 1242 × 2688',
+  // The store and the canvas size both follow the selected device, so they are parameters.
+  brandSubtitle: '{{store}} panel · {{size}}',
   about: 'About',
   light: 'Light',
   dark: 'Dark',
@@ -8,6 +9,7 @@ export const en = {
   switchToLight: 'Switch to light mode',
   switchToDark: 'Switch to dark mode',
 
+  device: 'Device',
   screenshot: 'Screenshot',
   dropImage: 'Click or drop an image',
   replaceImage: 'Replace image',
@@ -35,15 +37,15 @@ export const en = {
 
   aboutTitle: 'About this site',
   closeInfo: 'Close info',
-  modalTagline: 'Make App Store marketing screenshots in your browser.',
+  modalTagline: 'Make App Store and Google Play marketing screenshots in your browser.',
   modalIntro:
-    "Drop a raw screenshot from your phone or simulator into an iPhone frame, add a caption with one word picked out in a highlight color, and export a ready-to-upload 1242 × 2688 PNG — the App Store's 6.5\" size. Everything runs locally in your browser: nothing is uploaded anywhere.",
+    'Pick a device, drop a raw screenshot from your phone, tablet, or simulator into its frame, add a caption with one word picked out in a highlight color, and export a ready-to-upload PNG at the exact size that store asks for. Everything runs locally in your browser: nothing is uploaded anywhere.',
 
-  step1Title: 'Add your screenshot.',
+  step1Title: 'Pick the device and add your screenshot.',
   step1Body:
-    "Click the drop zone (or drag an image onto it). It's scaled to fill the phone's screen and cropped from the center, so any size works.",
+    "Choose an iPhone, iPad, Android phone, or Android tablet, then click the drop zone (or drag an image onto it). It's scaled to fill the device's screen and cropped from the center, so any size works.",
   step2Title: 'Write the caption.',
-  step2Body: 'Press Enter for a line break. It stays centered in the space above the phone.',
+  step2Body: 'Press Enter for a line break. It stays centered in the space above the device.',
   step3Title: 'Pick the highlighted words.',
   step3Body: 'Tap any word chip to toggle it into the highlight color. Tap it again to turn it off.',
   step4Title: 'Set the colors and type.',

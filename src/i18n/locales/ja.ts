@@ -1,7 +1,7 @@
 import type { Dict } from './en'
 
 export const ja: Dict = {
-  brandSubtitle: 'App Store 用画像 · 1242 × 2688',
+  brandSubtitle: '{{store}} 用画像 · {{size}}',
   about: '概要',
   light: 'ライト',
   dark: 'ダーク',
@@ -10,6 +10,7 @@ export const ja: Dict = {
   switchToLight: 'ライトモードに切り替える',
   switchToDark: 'ダークモードに切り替える',
 
+  device: 'デバイス',
   screenshot: 'スクリーンショット',
   dropImage: 'クリックまたは画像をドロップ',
   replaceImage: '画像を差し替える',
@@ -37,15 +38,15 @@ export const ja: Dict = {
 
   aboutTitle: 'このサイトについて',
   closeInfo: '説明を閉じる',
-  modalTagline: 'App Store 用のマーケティング画像をブラウザーで作成できます。',
+  modalTagline: 'App Store と Google Play 用のマーケティング画像をブラウザーで作成できます。',
   modalIntro:
-    'スマートフォンやシミュレーターのスクリーンショットを iPhone のフレームに入れ、1 語を強調したキャプションを添えて、そのままアップロードできる 1242 × 2688 の PNG（App Store の 6.5 インチ用サイズ）を書き出せます。すべてブラウザー内で処理され、画像がどこかに送信されることはありません。',
+    'デバイスを選び、スマートフォン・タブレット・シミュレーターのスクリーンショットをそのフレームに入れ、1 語を強調したキャプションを添えて、各ストアが求めるサイズのままアップロードできる PNG を書き出せます。すべてブラウザー内で処理され、画像がどこかに送信されることはありません。',
 
-  step1Title: 'スクリーンショットを追加',
+  step1Title: 'デバイスを選んでスクリーンショットを追加',
   step1Body:
-    'ドロップ領域をクリックするか、画像をドラッグしてください。画面いっぱいに拡大され中央でトリミングされるため、どのサイズでも使えます。',
+    'iPhone・iPad・Android スマートフォン・Android タブレットから選び、ドロップ領域をクリックするか画像をドラッグしてください。デバイスの画面いっぱいに拡大され中央でトリミングされるため、どのサイズでも使えます。',
   step2Title: 'キャプションを入力',
-  step2Body: 'Enter キーで改行できます。端末の上の余白の中央に配置されます。',
+  step2Body: 'Enter キーで改行できます。デバイスの上の余白の中央に配置されます。',
   step3Title: '強調する単語を選ぶ',
   step3Body: '単語をタップすると強調色になります。もう一度タップすると解除されます。',
   step4Title: '色と文字を設定',

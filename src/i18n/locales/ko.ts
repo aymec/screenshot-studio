@@ -1,7 +1,7 @@
 import type { Dict } from './en'
 
 export const ko: Dict = {
-  brandSubtitle: 'App Store 이미지 · 1242 × 2688',
+  brandSubtitle: '{{store}} 이미지 · {{size}}',
   about: '소개',
   light: '라이트',
   dark: '다크',
@@ -10,6 +10,7 @@ export const ko: Dict = {
   switchToLight: '라이트 모드로 전환',
   switchToDark: '다크 모드로 전환',
 
+  device: '기기',
   screenshot: '스크린샷',
   dropImage: '클릭하거나 이미지를 끌어다 놓으세요',
   replaceImage: '이미지 교체',
@@ -37,13 +38,13 @@ export const ko: Dict = {
 
   aboutTitle: '이 사이트 소개',
   closeInfo: '설명 닫기',
-  modalTagline: '브라우저에서 App Store 마케팅 스크린샷을 만드세요.',
+  modalTagline: '브라우저에서 App Store와 Google Play 마케팅 스크린샷을 만드세요.',
   modalIntro:
-    '휴대폰이나 시뮬레이터의 스크린샷을 iPhone 프레임에 넣고, 한 단어를 강조한 문구를 더한 다음, 바로 업로드할 수 있는 1242 × 2688 PNG(App Store의 6.5인치 규격)로 내보내세요. 모든 작업은 브라우저 안에서 처리되며 어떤 이미지도 업로드되지 않습니다.',
+    '기기를 고르고, 휴대폰이나 태블릿, 시뮬레이터의 스크린샷을 그 프레임에 넣고, 한 단어를 강조한 문구를 더한 다음, 해당 스토어가 요구하는 크기 그대로 업로드할 수 있는 PNG로 내보내세요. 모든 작업은 브라우저 안에서 처리되며 어떤 이미지도 업로드되지 않습니다.',
 
-  step1Title: '스크린샷 추가하기',
+  step1Title: '기기를 고르고 스크린샷 추가하기',
   step1Body:
-    '드롭 영역을 클릭하거나 이미지를 끌어다 놓으세요. 화면을 가득 채우도록 확대되고 가운데를 기준으로 잘리므로 어떤 크기든 괜찮습니다.',
+    'iPhone, iPad, Android 휴대폰, Android 태블릿 중에서 고른 다음 드롭 영역을 클릭하거나 이미지를 끌어다 놓으세요. 기기 화면을 가득 채우도록 확대되고 가운데를 기준으로 잘리므로 어떤 크기든 괜찮습니다.',
   step2Title: '문구 작성하기',
   step2Body: 'Enter 키로 줄을 바꿉니다. 문구는 기기 위쪽 공간의 가운데에 유지됩니다.',
   step3Title: '강조할 단어 고르기',

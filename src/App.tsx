@@ -2,11 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ControlsPanel } from './components/ControlsPanel'
 import { InfoModal } from './components/InfoModal'
 import { exportPng, loadImage, render } from './render'
-import { DEFAULT_DESIGN, IPHONE_65, type Design } from './template'
+import { DEFAULT_DESIGN, DEFAULT_PRESET, presetById, type Design } from './template'
 import { useTheme } from './theme'
 import { useI18n } from './i18n'
 
 const STORAGE_KEY = 'screenshot-studio:design'
+const DEVICE_KEY = 'screenshot-studio:device'
 
 function loadDesign(): Design {
   try {
@@ -18,6 +19,17 @@ function loadDesign(): Design {
   return DEFAULT_DESIGN
 }
 
+/** The design is the user's; the device is which panel it is rendered into. Stored apart. */
+function loadDeviceId(): string {
+  try {
+    // presetById falls back to the default, so a preset dropped from a later build — or any
+    // junk in storage — cannot leave the app with no geometry to render.
+    return presetById(localStorage.getItem(DEVICE_KEY) ?? '').id
+  } catch {
+    return DEFAULT_PRESET.id
+  }
+}
+
 const slug = (s: string) =>
   s
     .toLowerCase()
@@ -26,9 +38,10 @@ const slug = (s: string) =>
     .slice(0, 40) || 'screenshot'
 
 export default function App() {
-  const preset = IPHONE_65
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
+  const [deviceId, setDeviceId] = useState<string>(loadDeviceId)
+  const preset = presetById(deviceId)
   const [design, setDesign] = useState<Design>(loadDesign)
   const [screenshot, setScreenshot] = useState<HTMLImageElement | null>(null)
   const [imageName, setImageName] = useState<string | null>(null)
@@ -49,9 +62,30 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // Drop the old frame as soon as the device changes: it was drawn for the previous
+  // geometry, and rendering it into the new one would stretch it across a mismatched body
+  // for a frame or two. `cancelled` keeps a slow load from a device the user already
+  // switched away from landing on top of the current one.
   useEffect(() => {
-    loadImage(preset.frame.src).then(setFrame).catch(console.error)
+    let cancelled = false
+    setFrame(null)
+    loadImage(preset.frame.src)
+      .then((img) => {
+        if (!cancelled) setFrame(img)
+      })
+      .catch(console.error)
+    return () => {
+      cancelled = true
+    }
   }, [preset.frame.src])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DEVICE_KEY, deviceId)
+    } catch {
+      // Private mode: the choice just won't survive a reload.
+    }
+  }, [deviceId])
 
   // The first paint must wait for the webfont, or the caption measures and draws
   // in a fallback face and the layout shifts once Inter arrives.
@@ -92,9 +126,13 @@ export default function App() {
     reader.readAsDataURL(file)
   }, [])
 
+  // The device is in the filename: the same caption is normally exported once per device,
+  // and without it each export would land on the last one in the downloads folder.
   const handleExport = useCallback(() => {
-    if (canvasRef.current) exportPng(canvasRef.current, `${slug(design.sentence)}.png`)
-  }, [design.sentence])
+    if (canvasRef.current) {
+      exportPng(canvasRef.current, `${slug(design.sentence)}-${preset.id}.png`)
+    }
+  }, [design.sentence, preset.id])
 
   const handleReset = useCallback(() => setDesign(DEFAULT_DESIGN), [])
 
@@ -122,6 +160,8 @@ export default function App() {
 
       <ControlsPanel
         design={design}
+        preset={preset}
+        onDevice={setDeviceId}
         onChange={patch}
         onImage={handleImage}
         onExport={handleExport}

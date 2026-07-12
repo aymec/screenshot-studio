@@ -1,7 +1,7 @@
 import type { Dict } from './en'
 
 export const zhTW: Dict = {
-  brandSubtitle: 'App Store 圖片 · 1242 × 2688',
+  brandSubtitle: '{{store}} 圖片 · {{size}}',
   about: '關於',
   light: '淺色',
   dark: '深色',
@@ -10,6 +10,7 @@ export const zhTW: Dict = {
   switchToLight: '切換為淺色模式',
   switchToDark: '切換為深色模式',
 
+  device: '裝置',
   screenshot: '螢幕截圖',
   dropImage: '點擊或拖曳圖片',
   replaceImage: '更換圖片',
@@ -37,15 +38,15 @@ export const zhTW: Dict = {
 
   aboutTitle: '關於本站',
   closeInfo: '關閉說明',
-  modalTagline: '在瀏覽器中製作 App Store 行銷截圖。',
+  modalTagline: '在瀏覽器中製作 App Store 和 Google Play 行銷截圖。',
   modalIntro:
-    '把手機或模擬器的原始截圖放進 iPhone 外框，加上一句強調其中一個字詞的文案，匯出可直接上傳的 1242 × 2688 PNG —— 也就是 App Store 的 6.5 吋尺寸。所有處理都在瀏覽器本機完成，不會上傳任何圖片。',
+    '選擇裝置，把手機、平板或模擬器的原始截圖放進對應外框，加上一句強調其中一個字詞的文案，匯出可直接上傳的 PNG —— 尺寸正是該商店所要求的。所有處理都在瀏覽器本機完成，不會上傳任何圖片。',
 
-  step1Title: '加入你的截圖。',
+  step1Title: '選擇裝置並加入你的截圖。',
   step1Body:
-    '點擊拖放區域，或把圖片拖進去。圖片會縮放到填滿手機螢幕並從中央裁切，因此任何尺寸都適用。',
+    '先選擇 iPhone、iPad、Android 手機或 Android 平板，然後點擊拖放區域，或把圖片拖進去。圖片會縮放到填滿裝置螢幕並從中央裁切，因此任何尺寸都適用。',
   step2Title: '撰寫文案。',
-  step2Body: '按 Enter 鍵換行。文案會維持在手機上方空白區域的中央。',
+  step2Body: '按 Enter 鍵換行。文案會維持在裝置上方空白區域的中央。',
   step3Title: '挑選要強調的字詞。',
   step3Body: '點一下任一字詞即可套用強調顏色，再點一次即可取消。',
   step4Title: '設定顏色與字體。',

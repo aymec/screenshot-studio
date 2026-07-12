@@ -9,6 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "verify": "node scripts/verify-render.mjs",
+    "verify:frames": "node scripts/verify-frames.mjs",
     "seo": "node scripts/gen-seo.mjs",
     "predev": "npm run seo",
     "prebuild": "npm run seo",

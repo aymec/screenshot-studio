@@ -1,7 +1,7 @@
 import type { Dict } from './en'
 
 export const it: Dict = {
-  brandSubtitle: 'Immagine App Store · 1242 × 2688',
+  brandSubtitle: 'Immagine {{store}} · {{size}}',
   about: 'Info',
   light: 'Chiaro',
   dark: 'Scuro',
@@ -10,6 +10,7 @@ export const it: Dict = {
   switchToLight: 'Passa alla modalità chiara',
   switchToDark: 'Passa alla modalità scura',
 
+  device: 'Dispositivo',
   screenshot: 'Screenshot',
   dropImage: 'Fai clic o trascina un’immagine',
   replaceImage: 'Sostituisci immagine',
@@ -37,15 +38,15 @@ export const it: Dict = {
 
   aboutTitle: 'Informazioni su questo sito',
   closeInfo: 'Chiudi le informazioni',
-  modalTagline: 'Crea gli screenshot promozionali per l’App Store nel browser.',
+  modalTagline: 'Crea gli screenshot promozionali per App Store e Google Play nel browser.',
   modalIntro:
-    'Trascina uno screenshot del tuo telefono o del simulatore dentro una cornice iPhone, aggiungi una didascalia con una parola evidenziata ed esporta un PNG 1242 × 2688 pronto da caricare: il formato 6,5" dell’App Store. Tutto funziona localmente nel browser: nessuna immagine viene caricata da nessuna parte.',
+    'Scegli un dispositivo, trascina uno screenshot del tuo telefono, del tablet o del simulatore dentro la sua cornice, aggiungi una didascalia con una parola evidenziata ed esporta un PNG pronto da caricare, esattamente nella dimensione richiesta da quello store. Tutto funziona localmente nel browser: nessuna immagine viene caricata da nessuna parte.',
 
-  step1Title: 'Aggiungi il tuo screenshot.',
+  step1Title: 'Scegli il dispositivo e aggiungi il tuo screenshot.',
   step1Body:
-    'Fai clic sull’area di rilascio (o trascinaci sopra un’immagine). Viene ridimensionata per riempire lo schermo del telefono e ritagliata dal centro: va bene qualsiasi dimensione.',
+    'Scegli un iPhone, un iPad, un telefono o un tablet Android, poi fai clic sull’area di rilascio (o trascinaci sopra un’immagine). Viene ridimensionata per riempire lo schermo del dispositivo e ritagliata dal centro: va bene qualsiasi dimensione.',
   step2Title: 'Scrivi la didascalia.',
-  step2Body: 'Premi Invio per andare a capo. Resta centrata nello spazio sopra il telefono.',
+  step2Body: 'Premi Invio per andare a capo. Resta centrata nello spazio sopra il dispositivo.',
   step3Title: 'Scegli le parole da evidenziare.',
   step3Body:
     'Tocca una parola per applicarle il colore di evidenziazione. Toccala di nuovo per rimuoverlo.',
