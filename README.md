@@ -7,6 +7,10 @@ the browser.
 
 Live at [screenshot-studio.aymeric.fyi](https://screenshot-studio.aymeric.fyi).
 
+| An exported panel | The editor on a phone |
+| --- | --- |
+| <img src="docs/screenshot-studio-desktop.png" alt="An exported iPad Pro 13&quot; panel: the caption &quot;MyApp is the Best App&quot; over a tablet frame on a navy background" width="420"> | <img src="docs/screenshot-studio-mobile.png" alt="Screenshot Studio on a phone: the live canvas preview, the screenshot strip, and the floating controls button" width="420"> |
+
 ## Devices
 
 Four presets, one per listing size the two stores ask for:
