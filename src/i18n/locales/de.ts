@@ -1,7 +1,7 @@
 import type { Dict } from './en'
 
 export const de: Dict = {
-  brandSubtitle: 'App-Store-Bild · 1242 × 2688',
+  brandSubtitle: '{{store}}-Bild · {{size}}',
   about: 'Info',
   light: 'Hell',
   dark: 'Dunkel',
@@ -10,6 +10,7 @@ export const de: Dict = {
   switchToLight: 'Zum hellen Modus wechseln',
   switchToDark: 'Zum dunklen Modus wechseln',
 
+  device: 'Gerät',
   screenshot: 'Screenshot',
   dropImage: 'Bild anklicken oder hierher ziehen',
   replaceImage: 'Bild ersetzen',
@@ -37,16 +38,16 @@ export const de: Dict = {
 
   aboutTitle: 'Über diese Website',
   closeInfo: 'Infos schließen',
-  modalTagline: 'Erstelle App-Store-Marketing-Screenshots direkt im Browser.',
+  modalTagline: 'Erstelle Marketing-Screenshots für App Store und Google Play direkt im Browser.',
   modalIntro:
-    'Zieh einen Screenshot von deinem Telefon oder Simulator in einen iPhone-Rahmen, füge einen Text mit einem hervorgehobenen Wort hinzu und exportiere ein fertiges PNG mit 1242 × 2688 — der 6,5"-Größe des App Store. Alles läuft lokal in deinem Browser: Es wird nichts hochgeladen.',
+    'Wähle ein Gerät, zieh einen Screenshot von deinem Telefon, Tablet oder Simulator in dessen Rahmen, füge einen Text mit einem hervorgehobenen Wort hinzu und exportiere ein fertiges PNG — genau in der Größe, die der jeweilige Store verlangt. Alles läuft lokal in deinem Browser: Es wird nichts hochgeladen.',
 
-  step1Title: 'Screenshot hinzufügen.',
+  step1Title: 'Gerät wählen und Screenshot hinzufügen.',
   step1Body:
-    'Klicke auf das Feld (oder zieh ein Bild hinein). Das Bild wird auf den Telefonbildschirm skaliert und aus der Mitte zugeschnitten — jede Größe funktioniert.',
+    'Wähle ein iPhone, ein iPad, ein Android-Telefon oder ein Android-Tablet und klicke dann auf das Feld (oder zieh ein Bild hinein). Das Bild wird auf den Gerätebildschirm skaliert und aus der Mitte zugeschnitten — jede Größe funktioniert.',
   step2Title: 'Text schreiben.',
   step2Body:
-    'Drücke die Eingabetaste für einen Zeilenumbruch. Der Text bleibt über dem Telefon zentriert.',
+    'Drücke die Eingabetaste für einen Zeilenumbruch. Der Text bleibt über dem Gerät zentriert.',
   step3Title: 'Hervorgehobene Wörter wählen.',
   step3Body:
     'Tippe ein Wort an, um ihm die Akzentfarbe zu geben. Tippe erneut, um sie zu entfernen.',

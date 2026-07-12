@@ -24,16 +24,26 @@ depends on there being exactly one.
 
 ## Layout invariants
 
-Geometry lives in `src/template.ts` (`DevicePreset`) and is what the bundled frame asset was
-drawn against. Changing these numbers changes the output, so change them deliberately:
+Geometry lives in `src/template.ts` (`DevicePreset`), one preset per device. A preset's rects and
+its bundled frame asset were authored against each other, so they only mean anything together:
+the frame is drawn at `frame`, and `screen` is the hole in it. Changing these numbers changes the
+output, so change them deliberately.
 
-- Canvas 1242 × 2688; frame 1087 × 2189 at (78, 483); screen 946 × 2054 at (148, 546).
-- `screen.radius` is **140**. It must exceed the frame PNG's screen aperture (~135px) or the
-  screenshot's corners poke out past the bezel, but stay under ~150px or the rounding eats into the
-  visible screen. Both failure modes are subtle; `verify-ui.mjs` flood-fills from the canvas border
-  through the frame's transparent pixels to prove nothing leaks outside the phone body.
+- The four presets: iPhone 6.5" (1242 × 2688), iPad Pro 13" (2064 × 2752), Android phone
+  (1512 × 2688), Android tablet (1548 × 2752). The iPhone is the default.
+- `screen.radius` sits between two failure modes, and the safe window differs per frame because it
+  depends on how far the screen rect overhangs that frame's screen aperture. **Too small** and the
+  screenshot's square corners poke out past the phone's rounded body. **Too large** and the mask
+  pulls in tighter than the aperture, so the background bleeds through as a hairline at the screen's
+  corners — invisible on a dark background, obvious on a bright one. The iPhone shipped at 140
+  against a 133px aperture and had exactly that bleed at its two bottom corners; it is now 130.
+  Don't round the corners more to make them "look right" — measure.
+- `scripts/verify-frames.mjs` proves both, for every device, by flood-filling the frame's alpha:
+  from the canvas border inward is outside the body; from the middle of the screen outward is the
+  aperture. Run it if you touch any geometry.
 - The caption is centered by its **ink box** (`actualBoundingBox*`), not font metrics, within the
   band between the canvas top and the frame. That is what keeps it optically centered across fonts.
+  The caption is the same size on every device, so `Design.fontSize` is shared, not per-device.
 
 ## Captions are not whitespace-delimited
 
@@ -63,6 +73,7 @@ There are no unit tests. Everything is checked by driving the real app in headle
 | script | covers |
 | --- | --- |
 | `npm run verify` | golden-image regression of the rendered panel |
+| `scripts/verify-frames.mjs` | every device: canvas size, corner leaks, aperture bleed |
 | `scripts/verify-ui.mjs` | every control, corner leaks, export, persistence |
 | `scripts/verify-responsive.mjs` | desktop dock vs. mobile slide-over, the floating button |
 | `scripts/verify-theme.mjs` | light/dark, OS default, persistence |

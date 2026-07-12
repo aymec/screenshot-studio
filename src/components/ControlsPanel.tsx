@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { readableOn } from '../color'
-import { FONTS, type Design } from '../template'
+import { FONTS, PRESETS, type Design, type DevicePreset } from '../template'
 import { tokenize } from '../text'
 import type { Theme } from '../theme'
 import { LANGUAGES, type Lang, type TKey } from '../i18n'
 
 interface Props {
   design: Design
+  preset: DevicePreset
+  onDevice: (id: string) => void
   onChange: (patch: Partial<Design>) => void
   onImage: (file: File) => void
   onExport: () => void
@@ -186,6 +188,8 @@ function HeaderButton({
 
 export function ControlsPanel({
   design,
+  preset,
+  onDevice,
   onChange,
   onImage,
   onExport,
@@ -203,6 +207,7 @@ export function ControlsPanel({
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
   const wordList = tokenize(design.sentence).map((tok) => tok.text)
+  const size = `${preset.canvas.w} × ${preset.canvas.h}`
 
   const pickFile = (files: FileList | null) => {
     const file = files?.[0]
@@ -217,7 +222,9 @@ export function ControlsPanel({
     >
       <div>
         <h1 className="text-lg font-bold text-slate-900 dark:text-slate-100">Screenshot Studio</h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400">{t('brandSubtitle')}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          {t('brandSubtitle', { store: preset.store, size })}
+        </p>
 
         {/* Info + theme, directly under the title. */}
         <div className="mt-3 flex flex-wrap gap-2">
@@ -249,6 +256,27 @@ export function ControlsPanel({
           <LanguageMenu lang={lang} onLang={onLang} t={t} />
         </div>
       </div>
+
+      {/* First control in the panel: the device decides the canvas everything else is laid
+          out against, so it is the choice that comes before the rest of the design. */}
+      <Field label={t('device')}>
+        <select
+          data-device-select
+          value={preset.id}
+          onChange={(e) => onDevice(e.target.value)}
+          className={`w-full px-2 py-1.5 text-sm ${control}`}
+        >
+          {[...new Set(PRESETS.map((p) => p.store))].map((store) => (
+            <optgroup key={store} label={store}>
+              {PRESETS.filter((p) => p.store === store).map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label} — {p.canvas.w} × {p.canvas.h}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+      </Field>
 
       <Section label={t('screenshot')}>
         <div
