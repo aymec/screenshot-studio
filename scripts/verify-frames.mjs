@@ -26,6 +26,8 @@ import puppeteer from 'puppeteer-core'
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const URL = 'http://localhost:5173/'
 const FIXTURE = 'tests/fixtures/sample-screenshot.png'
+// Any second, visibly different image: used only to tell one device's screenshot from another's.
+const GOLDEN = 'tests/fixtures/golden-panel.png'
 
 const BG = { r: 0, g: 16, b: 39 } // #001027
 const DESIGN = {
@@ -171,6 +173,68 @@ for (const device of DEVICES) {
   check('screenshot stays inside the phone body', result.leak === 0, `${result.leak} px outside the body`)
   check('screenshot covers the whole screen', result.gap === 0, `${result.gap} background px inside the aperture`)
 }
+
+// A screenshot is of one device: a phone capture center-cropped into a tablet's screen is not
+// a panel anyone would ship. So each device keeps its own, and switching between them shows
+// the one that was dropped in for that device — or the empty state, never another device's.
+console.log('\nscreenshots are per-device')
+
+const IPHONE = DEVICES[0]
+const IPAD = DEVICES[1]
+const centre = (d) => [Math.round(d.screen[0] + d.screen[2] / 2), Math.round(d.screen[1] + d.screen[3] / 2)]
+const pixel = ([x, y]) =>
+  page.evaluate(
+    ([x, y]) => [...document.querySelector('canvas').getContext('2d').getImageData(x, y, 1, 1).data.slice(0, 3)],
+    [x, y],
+  )
+// The fixture is white in the middle; the empty state is the background under a 8% white wash.
+const hasShot = (px) => px[0] > 200 && px[1] > 200 && px[2] > 200
+const dropZoneName = () =>
+  page.$eval('div[class*="border-dashed"]', (el) => el.textContent)
+
+await page.evaluate(() => localStorage.removeItem('screenshot-studio:device'))
+await page.reload({ waitUntil: 'networkidle0' })
+
+// The iPhone gets a screenshot; the iPad has never been given one.
+await (await page.$('input[type=file]')).uploadFile(FIXTURE)
+await page.waitForFunction(
+  ([x, y]) => {
+    const d = document.querySelector('canvas').getContext('2d').getImageData(x, y, 1, 1).data
+    return d[0] > 200 && d[1] > 200 && d[2] > 200
+  },
+  { timeout: 10000 },
+  centre(IPHONE),
+)
+check('iPhone shows its screenshot', hasShot(await pixel(centre(IPHONE))))
+check('iPhone drop zone offers to replace', (await dropZoneName()).includes('sample-screenshot.png'))
+
+// Switching device must NOT carry the iPhone's screenshot over to the iPad.
+await page.select('[data-device-select]', IPAD.id)
+await page.waitForFunction((w) => document.querySelector('canvas').width === w, {}, IPAD.canvas[0])
+check('iPad does not inherit the iPhone screenshot', !hasShot(await pixel(centre(IPAD))))
+check(
+  'iPad drop zone is back to the empty state',
+  !(await dropZoneName()).includes('sample-screenshot.png'),
+  await dropZoneName(),
+)
+
+// Give the iPad its own, distinct image.
+await (await page.$('input[type=file]')).uploadFile(GOLDEN)
+await page.waitForFunction(
+  () => document.querySelector('div[class*="border-dashed"]').textContent.includes('golden-panel.png'),
+  { timeout: 10000 },
+)
+check('iPad shows its own screenshot', (await dropZoneName()).includes('golden-panel.png'))
+
+// Going back and forth shows each device its own image, not the other's.
+await page.select('[data-device-select]', IPHONE.id)
+await page.waitForFunction((w) => document.querySelector('canvas').width === w, {}, IPHONE.canvas[0])
+check('iPhone still has its own screenshot', hasShot(await pixel(centre(IPHONE))))
+check('iPhone kept its own file', (await dropZoneName()).includes('sample-screenshot.png'))
+
+await page.select('[data-device-select]', IPAD.id)
+await page.waitForFunction((w) => document.querySelector('canvas').width === w, {}, IPAD.canvas[0])
+check('iPad kept its own file', (await dropZoneName()).includes('golden-panel.png'))
 
 await browser.close()
 console.log(failures === 0 ? '\nAll devices OK' : `\n${failures} check(s) failed`)
