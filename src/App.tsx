@@ -4,7 +4,7 @@ import { ConfirmModal } from './components/ConfirmModal'
 import { ControlsPanel } from './components/ControlsPanel'
 import { InfoModal } from './components/InfoModal'
 import { ScreenshotStrip } from './components/ScreenshotStrip'
-import { download, exportPng, loadImage, render, toPng } from './render'
+import { blobToImage, download, exportPng, loadImage, render, toPng } from './render'
 import { zip } from './zip'
 import {
   DEFAULT_DESIGN,
@@ -20,11 +20,26 @@ import { useI18n } from './i18n'
 const STORAGE_KEY = 'screenshot-studio:design'
 const DEVICE_KEY = 'screenshot-studio:device'
 
+/**
+ * The capture dropped onto a screenshot: the decoded image the canvas draws, and the bytes of
+ * the file it was decoded from.
+ *
+ * The bytes are kept, not just the image, because they are what gets written to a saved project.
+ * An HTMLImageElement can only be turned back into a file by re-encoding it through a canvas,
+ * which would save a re-compressed PNG of whatever the user picked rather than the file itself.
+ */
+interface Shot {
+  img: HTMLImageElement
+  name: string
+  bytes: Uint8Array
+  type: string
+}
+
 /** One marketing screenshot: the panel's design, and the phone capture dropped into it. */
 interface Slide {
   design: Design
   /** The image and the file it came from. Never persisted — it lives only in this session. */
-  shot: { img: HTMLImageElement; name: string } | null
+  shot: Shot | null
 }
 
 /** A device's screenshots, in the order they will be exported. Every device has its own. */
@@ -241,12 +256,15 @@ export default function App() {
     (file: File) => {
       const device = deviceId
       const at = index
-      const reader = new FileReader()
-      reader.onload = async () => {
-        const img = await loadImage(reader.result as string)
-        patchSlide(device, at, (s) => ({ ...s, shot: { img, name: file.name } }))
+      const load = async () => {
+        const bytes = new Uint8Array(await file.arrayBuffer())
+        const img = await blobToImage(bytes, file.type)
+        patchSlide(device, at, (s) => ({
+          ...s,
+          shot: { img, name: file.name, bytes, type: file.type },
+        }))
       }
-      reader.readAsDataURL(file)
+      load().catch(console.error)
     },
     [patchSlide, deviceId, index],
   )
