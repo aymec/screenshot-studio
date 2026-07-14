@@ -28,8 +28,20 @@ Four presets, one per listing size the two stores ask for:
 Each device keeps its own deck of up to 10 screenshots — the store limit — and each screenshot
 carries its own image, caption and colors, so restyling one leaves the rest alone. Switching device
 swaps the whole deck: a phone capture center-cropped into a tablet's screen is not shippable.
-"Export all" hands back a single zip of the current device's deck, numbered in the order you see on
-the strip.
+
+## Saving your work
+
+Everything you do is kept in your browser, images included, and comes back when you return. Nothing
+is uploaded anywhere.
+
+The **Export** menu offers three ways out:
+
+- **Export this screenshot** — one PNG, at the exact size the store asks for.
+- **Export all screenshots** — a single zip of every screenshot of every device, numbered in the
+  order you see on the strip.
+- **Save project (.zip)** — the whole project: a `project.json` describing every device, screenshot,
+  caption and color, plus the original image files. **Load project** opens one back. It is an
+  ordinary zip, so you can look inside it, keep it in a repo, or hand it to someone else.
 
 ## The template
 
@@ -56,6 +68,9 @@ disagree with the DOM.
 - `src/template.ts` — device geometry, fonts, and the `Design` model
 - `src/render.ts` — the canvas renderer (caption layout, cover-fit, export)
 - `src/text.ts` — caption tokenization (see below)
+- `src/project.ts` — a project: live state in, stored record or `.zip` out, and back
+- `src/db.ts` — IndexedDB, where your work is kept between visits
+- `src/zip.ts` / `src/unzip.ts` — a zip writer and reader, so there is no dependency for either
 - `src/i18n/` — UI translations (10 languages)
 - `src/theme.ts` — light/dark, defaulting to the OS preference
 - `src/components/ControlsPanel.tsx` — the editor UI
@@ -102,6 +117,7 @@ node scripts/verify-responsive.mjs  # desktop/mobile layout and the slide-over p
 node scripts/verify-theme.mjs       # light/dark, OS default, persistence
 node scripts/verify-i18n.mjs        # all 10 locales, detection, persistence
 node scripts/verify-cjk.mjs         # Japanese/Chinese/Korean caption segmentation
+node scripts/verify-project.mjs     # work survives a reload; a project survives save/wipe/load
 ```
 
 `npm run verify` renders a panel from `tests/fixtures/sample-screenshot.png` with a fixed design

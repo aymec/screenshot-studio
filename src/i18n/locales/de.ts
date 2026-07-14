@@ -43,9 +43,19 @@ export const de: Dict = {
   weight: 'Schriftstärke — {{value}}',
   lineHeight: 'Zeilenhöhe — {{value}}',
 
-  exportPng: 'PNG exportieren',
-  exportAll: 'Alle exportieren',
+  export: 'Exportieren',
+  exportThis: 'Diesen Screenshot exportieren',
+  exportAll: 'Alle Screenshots exportieren',
+  saveProject: 'Projekt speichern (.zip)',
   exporting: 'Wird exportiert…',
+  savingProject: 'Projekt wird gespeichert…',
+  loadProject: 'Projekt öffnen…',
+  loadingProject: 'Projekt wird geöffnet…',
+  loadProjectTitle: 'Dieses Projekt öffnen?',
+  loadProjectBody: 'Alle Screenshots aller Geräte werden durch die aus der Datei ersetzt. Deine aktuelle Arbeit ist nirgendwo sonst gespeichert.',
+  loadErrorUnreadable: 'Die Datei konnte nicht gelesen werden. Sie ist möglicherweise beschädigt oder kein Zip-Archiv.',
+  loadErrorNotAProject: 'Dieses Zip ist kein Screenshot-Studio-Projekt.',
+  loadErrorTooNew: 'Dieses Projekt wurde mit einer neueren Version dieser App gespeichert.',
   reset: 'Auf Vorlage zurücksetzen',
   storageFull: 'Dieser Browser hat keinen Speicherplatz mehr, deine Bilder werden nicht mehr gespeichert. Gib Speicher frei oder sichere dein Projekt in einer Datei.',
 
@@ -72,7 +82,7 @@ export const de: Dict = {
     'Füge mit dem + unter der Vorschau bis zu 10 Screenshots pro Gerät hinzu und wechsle mit den nummerierten Kreisen zwischen ihnen. Jeder behält sein eigenes Bild, seinen Text, seine Farben und seine Schrift.',
   step6Title: 'Exportieren.',
   step6Body:
-    'Die Vorschau ist die echte Leinwand in voller Auflösung — das heruntergeladene PNG ist genau das, was du siehst. Exportiere den angezeigten Screenshot oder gleich die ganze Serie.',
+    'Die Vorschau ist die echte Canvas in voller Auflösung — das PNG, das du herunterlädst, ist genau das, was du siehst. Exportiere den Screenshot, auf dem du bist, alle Screenshots aller Geräte auf einmal, oder sichere das ganze Projekt als .zip, das du später wieder öffnen kannst.',
 
   modalFootnote:
     'Deine Arbeit wird in diesem Browser gespeichert — Bilder eingeschlossen — und beim nächsten Mal wiederhergestellt. Nichts wird irgendwohin hochgeladen.',

@@ -17,18 +17,18 @@ const check = (name, pass, detail) => {
   console.log(`${pass ? 'PASS' : 'FAIL'}  ${name}${detail ? ` — ${detail}` : ''}`)
 }
 
-// One distinctive string per locale: the export button.
+// One distinctive string per locale: the export menu's button.
 const EXPORT = {
-  en: 'Export PNG',
-  fr: 'Exporter en PNG',
-  es: 'Exportar PNG',
-  it: 'Esporta PNG',
-  de: 'PNG exportieren',
-  ja: 'PNG を書き出す',
-  ko: 'PNG 내보내기',
-  ru: 'Экспорт в PNG',
-  'zh-CN': '导出 PNG',
-  'zh-TW': '匯出 PNG',
+  en: 'Export',
+  fr: 'Exporter',
+  es: 'Exportar',
+  it: 'Esporta',
+  de: 'Exportieren',
+  ja: '書き出す',
+  ko: '내보내기',
+  ru: 'Экспорт',
+  'zh-CN': '导出',
+  'zh-TW': '匯出',
 }
 
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true })

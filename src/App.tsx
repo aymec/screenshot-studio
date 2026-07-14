@@ -11,10 +11,14 @@ import {
   blankDeck,
   emptyDecks,
   fromProject,
+  fromZip,
   imageKeys,
+  ProjectLoadError,
   sanitizeDesign,
   toProject,
+  toZip,
   type Decks,
+  type LoadFailure,
   type Slide,
 } from './project'
 import {
@@ -117,7 +121,13 @@ export default function App() {
   const [panelOpen, setPanelOpen] = useState(false)
   const [infoOpen, setInfoOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [exporting, setExporting] = useState(false)
+  // What the app is busy doing, if anything. All three raise the same overlay: each one takes long
+  // enough to look like a hang, and each one must block edits that would otherwise land in the
+  // middle of it — a design change mid-export would be drawn into the zip.
+  const [busy, setBusy] = useState<'export' | 'save' | 'load' | null>(null)
+  // The project file waiting on the user's answer to "this replaces everything — go ahead?".
+  const [pendingProject, setPendingProject] = useState<File | null>(null)
+  const [loadError, setLoadError] = useState<LoadFailure | null>(null)
   const { theme, toggleTheme } = useTheme()
   const { lang, setLang, t } = useI18n()
 
@@ -132,6 +142,7 @@ export default function App() {
       setPanelOpen(false)
       setInfoOpen(false)
       setConfirmDelete(false)
+      setPendingProject(null)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -323,43 +334,112 @@ export default function App() {
     }
   }, [design, preset.id, index])
 
-  // Draw each screenshot into the one real canvas in turn, collect the PNGs, and hand back a
-  // single zip — ten separate downloads is a browser permission prompt and a mess of a folder.
-  // A screenshot with no image in it is an empty frame nobody would upload, so it is skipped,
-  // but the numbering follows the deck: it is what the user sees on the chips.
-  // The canvas is left on the wrong screenshot for the length of the loop, which the render
-  // effect puts back — export and preview stay the same pixels either way.
+  // Draw every screenshot of every device into the one real canvas in turn, collect the PNGs, and
+  // hand back a single zip — a store listing is uploaded per device, and a burst of separate
+  // downloads is a browser permission prompt and a mess of a folder.
+  //
+  // It walks the devices, not just the selected one, so the whole listing comes out in one click.
+  // That means the canvas has to *become* each device in turn: its size is the export size, so it
+  // is resized per preset and put back at the end, along with the screenshot that was on it. It is
+  // still one canvas and one render path — preview and export remain the same pixels.
+  //
+  // A screenshot with no image is an empty frame nobody would upload, so it is skipped, but the
+  // numbering follows the deck: it is what the user sees on the chips.
   const handleExportAll = useCallback(async () => {
     const canvas = canvasRef.current
     const ctx = canvas?.getContext('2d')
     if (!canvas || !ctx) return
 
-    setExporting(true)
+    setBusy('export')
     // Let the overlay paint before the loop starts drawing over the canvas, or the user watches
-    // the preview flip through the deck with nothing to explain why.
+    // the preview flip through every device with nothing to explain why.
     await new Promise(requestAnimationFrame)
 
     try {
       const entries = []
-      for (const [i, s] of deck.entries()) {
-        if (!s.shot) continue
-        render(ctx, { preset, design: s.design, screenshot: s.shot.img, frame })
-        const png = await toPng(canvas)
-        if (png) {
-          entries.push({
-            name: filename(s.design, preset.id, i + 1),
-            data: new Uint8Array(await png.arrayBuffer()),
-          })
+      for (const p of PRESETS) {
+        const slides = decks[p.id] ?? []
+        if (!slides.some((s) => s.shot)) continue
+
+        // Each device's frame is drawn against its own geometry; the browser has them cached.
+        const deviceFrame = await loadImage(p.frame.src)
+        canvas.width = p.canvas.w
+        canvas.height = p.canvas.h
+
+        for (const [i, s] of slides.entries()) {
+          if (!s.shot) continue
+          render(ctx, { preset: p, design: s.design, screenshot: s.shot.img, frame: deviceFrame })
+          const png = await toPng(canvas)
+          if (png) {
+            entries.push({
+              name: filename(s.design, p.id, i + 1),
+              data: new Uint8Array(await png.arrayBuffer()),
+            })
+          }
         }
       }
+
+      // Put the canvas back where the user left it: it is the preview they are looking at.
+      canvas.width = preset.canvas.w
+      canvas.height = preset.canvas.h
       render(ctx, { preset, design, screenshot: slide.shot?.img ?? null, frame })
 
-      if (entries.length) download(zip(entries), `${preset.id}-screenshots.zip`)
+      if (entries.length) download(zip(entries), 'screenshots.zip')
     } finally {
       // Even if a screenshot fails to encode, the app must not be left behind the overlay.
-      setExporting(false)
+      setBusy(null)
     }
-  }, [deck, preset, frame, design, slide])
+  }, [decks, preset, frame, design, slide])
+
+  // The project as a file: one zip holding a manifest and every image, across every device. The
+  // database survives a reload; this survives the browser — it can be backed up, moved to another
+  // machine, or handed to someone else.
+  const handleSaveProject = useCallback(async () => {
+    setBusy('save')
+    await new Promise(requestAnimationFrame)
+    try {
+      const entries = toZip(decks, cursors, deviceId, PROJECT_NAME)
+      // The user's own date, not UTC's: saving late in the evening east of Greenwich would
+      // otherwise stamp the file with yesterday.
+      const now = new Date()
+      const pad = (n: number) => String(n).padStart(2, '0')
+      const day = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+      download(zip(entries), `screenshot-studio-project-${day}.zip`)
+    } finally {
+      setBusy(null)
+    }
+  }, [decks, cursors, deviceId])
+
+  // Opening a project throws away everything currently on every device, so it is asked about
+  // first. The file is held until the answer comes back.
+  const handleLoadProject = useCallback((file: File) => {
+    setLoadError(null)
+    setPendingProject(file)
+  }, [])
+
+  const confirmLoadProject = useCallback(async () => {
+    const file = pendingProject
+    setPendingProject(null)
+    if (!file) return
+
+    setBusy('load')
+    await new Promise(requestAnimationFrame)
+    try {
+      const restored = await fromZip(file)
+      // Every image in the archive is decoded before any of this lands, so the whole project
+      // appears at once rather than filling in screenshot by screenshot.
+      setDecks(restored.decks)
+      setCursors(restored.cursors)
+      // Unlike a reload, this *is* a deliberate act: the project says which device it was being
+      // worked on, and that is where the user expects to be put down.
+      setDeviceId(restored.deviceId)
+    } catch (e) {
+      // A file that cannot be opened leaves the work in progress exactly as it was.
+      setLoadError(e instanceof ProjectLoadError ? e.reason : 'unreadable')
+    } finally {
+      setBusy(null)
+    }
+  }, [pendingProject])
 
   const handleReset = useCallback(
     () => patchSlide(deviceId, index, (s) => ({ ...s, design: DEFAULT_DESIGN })),
@@ -411,9 +491,12 @@ export default function App() {
         onImage={handleImage}
         onExport={handleExport}
         onExportAll={handleExportAll}
-        // An empty frame is not a screenshot anyone uploads, so a deck with no images at all has
-        // nothing to zip — the button says so rather than downloading an empty file.
-        canExportAll={deck.some((s) => s.shot)}
+        // An empty frame is not a screenshot anyone uploads, so a project with no images at all
+        // has nothing to zip — the menu item says so rather than downloading an empty file.
+        canExportAll={Object.values(decks).some((slides) => slides.some((s) => s.shot))}
+        onSaveProject={handleSaveProject}
+        onLoadProject={handleLoadProject}
+        loadError={loadError}
         onReset={handleReset}
         storageFull={storageFull}
         count={deck.length}
@@ -437,6 +520,7 @@ export default function App() {
           It floats clear above the strip rather than beside it: overlapping the bottom corner of
           the preview costs nothing, while sharing the strip's line would squeeze the chips. */}
       <button
+        data-panel-toggle
         onClick={() => setPanelOpen((o) => !o)}
         aria-label={panelOpen ? t('closeControls') : t('showControls')}
         aria-expanded={panelOpen}
@@ -447,7 +531,10 @@ export default function App() {
         </svg>
       </button>
 
-      <BusyOverlay open={exporting} t={t} />
+      <BusyOverlay
+        open={busy !== null}
+        message={busy === 'save' ? t('savingProject') : busy === 'load' ? t('loadingProject') : t('exporting')}
+      />
 
       <InfoModal open={infoOpen} onClose={() => setInfoOpen(false)} t={t} />
 
@@ -457,6 +544,17 @@ export default function App() {
         body={t('deleteScreenshotBody')}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}
+        t={t}
+      />
+
+      {/* Opening a project replaces every screenshot on every device, which is not something to
+          discover afterwards. */}
+      <ConfirmModal
+        open={pendingProject !== null}
+        title={t('loadProjectTitle')}
+        body={t('loadProjectBody')}
+        onConfirm={confirmLoadProject}
+        onCancel={() => setPendingProject(null)}
         t={t}
       />
     </div>

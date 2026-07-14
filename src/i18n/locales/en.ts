@@ -44,9 +44,23 @@ export const en = {
   weight: 'Weight — {{value}}',
   lineHeight: 'Line height — {{value}}',
 
-  exportPng: 'Export PNG',
-  exportAll: 'Export all',
+  // The export menu. `export` is the button; the rest are the three ways out of the app.
+  export: 'Export',
+  exportThis: 'Export this screenshot',
+  exportAll: 'Export all screenshots',
+  saveProject: 'Save project (.zip)',
   exporting: 'Exporting…',
+  savingProject: 'Saving project…',
+
+  loadProject: 'Load project…',
+  loadingProject: 'Loading project…',
+  loadProjectTitle: 'Load this project?',
+  loadProjectBody:
+    'It replaces every screenshot on every device with the ones in the file. Your current work is not saved anywhere else.',
+  loadErrorUnreadable: 'That file could not be read. It may be damaged, or not a zip archive.',
+  loadErrorNotAProject: 'That zip is not a Screenshot Studio project.',
+  loadErrorTooNew: 'That project was saved by a newer version of this app.',
+
   reset: 'Reset to template defaults',
   storageFull: 'This browser is out of storage, so your images are no longer being saved. Free up space, or save your project to a file.',
 
@@ -70,7 +84,7 @@ export const en = {
     'Add up to 10 screenshots per device with the + under the preview, and switch between them with the numbered chips. Each one keeps its own image, caption, colors, and type.',
   step6Title: 'Export.',
   step6Body:
-    'The preview is the real canvas at full resolution, so the PNG you download is exactly what you see. Export the screenshot you are on, or the whole set at once.',
+    'The preview is the real canvas at full resolution, so the PNG you download is exactly what you see. Export the screenshot you are on, every screenshot of every device at once, or save the whole project as a .zip you can keep and open again later.',
 
   modalFootnote:
     'Your work is saved in this browser — images included — and restored next time. Nothing is uploaded anywhere.',

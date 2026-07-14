@@ -43,9 +43,19 @@ export const fr: Dict = {
   weight: 'Graisse — {{value}}',
   lineHeight: 'Interligne — {{value}}',
 
-  exportPng: 'Exporter en PNG',
-  exportAll: 'Tout exporter',
+  export: 'Exporter',
+  exportThis: 'Exporter cette capture',
+  exportAll: 'Exporter toutes les captures',
+  saveProject: 'Enregistrer le projet (.zip)',
   exporting: 'Exportation…',
+  savingProject: 'Enregistrement du projet…',
+  loadProject: 'Ouvrir un projet…',
+  loadingProject: 'Ouverture du projet…',
+  loadProjectTitle: 'Ouvrir ce projet ?',
+  loadProjectBody: 'Toutes les captures de tous les appareils seront remplacées par celles du fichier. Votre travail actuel n’est enregistré nulle part ailleurs.',
+  loadErrorUnreadable: 'Ce fichier n’a pas pu être lu. Il est peut-être endommagé, ou ce n’est pas une archive zip.',
+  loadErrorNotAProject: 'Ce zip n’est pas un projet Screenshot Studio.',
+  loadErrorTooNew: 'Ce projet a été enregistré par une version plus récente de l’application.',
   reset: 'Réinitialiser le modèle',
   storageFull: 'Ce navigateur n’a plus d’espace de stockage : vos images ne sont plus enregistrées. Libérez de l’espace ou enregistrez votre projet dans un fichier.',
 
@@ -72,7 +82,7 @@ export const fr: Dict = {
     'Ajoutez jusqu’à 10 captures d’écran par appareil avec le + sous l’aperçu, et passez de l’une à l’autre avec les pastilles numérotées. Chacune garde son image, sa légende, ses couleurs et sa typographie.',
   step6Title: 'Exportez.',
   step6Body:
-    'L’aperçu est le vrai canevas en pleine résolution : le PNG téléchargé est exactement ce que vous voyez. Exportez la capture affichée, ou toute la série d’un coup.',
+    'L’aperçu est le vrai canevas en pleine résolution : le PNG que vous téléchargez est exactement ce que vous voyez. Exportez la capture en cours, toutes les captures de tous les appareils d’un coup, ou enregistrez le projet entier dans un .zip que vous pourrez rouvrir plus tard.',
 
   modalFootnote:
     'Votre travail est enregistré dans ce navigateur — images comprises — et restauré à la prochaine visite. Rien n’est envoyé nulle part.',

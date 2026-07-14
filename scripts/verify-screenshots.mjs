@@ -60,6 +60,23 @@ const centering = () =>
 
 const disabled = (sel) => page.$eval(sel, (b) => b.disabled)
 
+// The three exports live behind one menu now, so reaching any of them means opening it. Escape
+// closes it again without touching the panel behind it.
+const openExportMenu = async () => {
+  if (!(await has('[data-export-list]'))) await page.click('[data-export-menu]')
+  await page.waitForSelector('[data-export-list]')
+}
+const exportItemDisabled = async (id) => {
+  await openExportMenu()
+  const state = await disabled(`[data-export-item="${id}"]`)
+  await page.keyboard.press('Escape')
+  return state
+}
+const clickExportItem = async (id) => {
+  await openExportMenu()
+  await page.click(`[data-export-item="${id}"]`)
+}
+
 // 1. A fresh app has one screenshot: both arrows present but spent, one chip, one add chip.
 check('starts with a single chip', (await n('[data-strip-chip]')) === 1)
 check('prev chevron is always on screen', await has('[data-strip-prev]'))
@@ -67,7 +84,8 @@ check('next chevron is always on screen', await has('[data-strip-next]'))
 check('prev is disabled on the first screenshot', await disabled('[data-strip-prev]'))
 check('next is disabled on the last screenshot', await disabled('[data-strip-next]'))
 check('add chip is offered', await has('[data-strip-add]'))
-check('no "Export all" with one screenshot', !(await has('[data-export-all]')))
+check('the export menu is offered', await has('[data-export-menu]'))
+check('"Export all" is disabled while nothing has an image', await exportItemDisabled('all'))
 
 // 2. The selected chip carries the highlight color.
 const chipBg = () =>
@@ -84,8 +102,7 @@ check('add chip appends a screenshot', (await n('[data-strip-chip]')) === 2)
 check('the new screenshot is selected', (await chipBg())[1].cur === 'true')
 check('prev enables once past the first', !(await disabled('[data-strip-prev]')))
 check('next stays disabled on the last one', await disabled('[data-strip-next]'))
-check('"Export all" appears with 2 screenshots', await has('[data-export-all]'))
-check('"Export all" is disabled while no screenshot has an image', await disabled('[data-export-all]'))
+check('"Export all" is still disabled with 2 empty screenshots', await exportItemDisabled('all'))
 
 // 3b. Geometry: every chip is 36px and the arrows 44px; the selected chip aligns to the arrows'
 //     top edge, and the unselected ones to their centerline.
@@ -182,7 +199,7 @@ check('each screenshot persists its own design', (await pixel(5, 5)) === '#7b2d8
 //     the export is already live; screenshot 5 gets one too, to prove the numbering.
 check(
   '"Export all" is still live after a reload, because the image came back',
-  !(await disabled('[data-export-all]')),
+  !(await exportItemDisabled('all')),
 )
 const upload = async (i) => {
   await chip(i)
@@ -197,7 +214,7 @@ const upload = async (i) => {
 }
 await upload(0)
 await upload(4)
-check('"Export all" enables once a screenshot has an image', !(await disabled('[data-export-all]')))
+check('"Export all" enables once a screenshot has an image', !(await exportItemDisabled('all')))
 
 // Catch the blob the app hands to the browser instead of letting it hit the downloads folder.
 await page.evaluate(() => {
@@ -212,7 +229,7 @@ await page.evaluate(() => {
   }
 })
 check('nothing is spinning before the export starts', !(await has('[data-busy]')))
-await page.click('[data-export-all]')
+await clickExportItem('all')
 // The canvas visibly flips through the deck while it renders, so the spinner has to be up for it.
 const spun = await page
   .waitForSelector('[data-busy]', { timeout: 5000 })
@@ -232,7 +249,7 @@ const result = await page.evaluate(async () => {
   return { count: 1, names: window.__names, type: blobs[0].type, b64: btoa(binary) }
 })
 check('export all hands back exactly one file', result.count === 1, `${result.count} downloads`)
-check('that file is a zip', result.type === 'application/zip' && result.names[0] === 'iphone-6.5-screenshots.zip', `${result.type}, ${result.names?.[0]}`)
+check('that file is a zip', result.type === 'application/zip' && result.names[0] === 'screenshots.zip', `${result.type}, ${result.names?.[0]}`)
 
 const zipPath = '/tmp/strip-export.zip'
 writeFileSync(zipPath, Buffer.from(result.b64, 'base64'))

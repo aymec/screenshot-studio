@@ -43,9 +43,19 @@ export const zhTW: Dict = {
   weight: '字重 — {{value}}',
   lineHeight: '行高 — {{value}}',
 
-  exportPng: '匯出 PNG',
-  exportAll: '全部匯出',
+  export: '匯出',
+  exportThis: '匯出這張截圖',
+  exportAll: '匯出所有截圖',
+  saveProject: '儲存專案（.zip）',
   exporting: '正在匯出…',
+  savingProject: '正在儲存專案…',
+  loadProject: '開啟專案…',
+  loadingProject: '正在開啟專案…',
+  loadProjectTitle: '開啟這個專案？',
+  loadProjectBody: '所有裝置上的截圖都會被檔案中的內容取代。你目前的作品沒有儲存在其他任何地方。',
+  loadErrorUnreadable: '無法讀取這個檔案。它可能已損毀，或者不是 zip 壓縮檔。',
+  loadErrorNotAProject: '這個 zip 不是 Screenshot Studio 專案。',
+  loadErrorTooNew: '這個專案是由較新版本的應用程式儲存的。',
   reset: '還原範本預設值',
   storageFull: '這個瀏覽器的儲存空間已滿，圖片不再儲存。請釋出空間，或將專案儲存為檔案。',
 
@@ -69,7 +79,7 @@ export const zhTW: Dict = {
     '用預覽下方的 + 為每個裝置新增最多 10 張截圖，並用有編號的圓點在它們之間切換。每一張都保有各自的圖片、文案、顏色與字體。',
   step6Title: '匯出。',
   step6Body:
-    '預覽就是全解析度的實際畫布，因此下載的 PNG 與你所見完全一致。可以只匯出目前這張，也可以一次匯出整組。',
+    '預覽就是全解析度的真實畫布，所以下載的 PNG 與你看到的完全一致。可以匯出目前這張截圖、一次匯出所有裝置的所有截圖，或者把整個專案儲存為 .zip，之後再開啟。',
 
   modalFootnote:
     '你的作品會儲存在這個瀏覽器中（包括圖片），下次會自動還原。不會上傳到任何地方。',

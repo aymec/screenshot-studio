@@ -42,7 +42,7 @@ const visible = (page, sel) =>
   check('desktop: panel is on the RIGHT of the preview', aside.x > canvas.right - 1, `canvas ends ${canvas.right}, panel starts ${aside.x}`)
   check('desktop: panel is fully on screen', aside.right <= vw + 1 && aside.x < vw, `x=${aside.x} right=${aside.right}`)
   check('desktop: preview is visible', canvas.visible && canvas.w > 100, `canvas ${canvas.w}px wide`)
-  check('desktop: no burger button', !(await visible(page, 'button[aria-expanded]')), 'hidden at lg+')
+  check('desktop: no burger button', !(await visible(page, '[data-panel-toggle]')), 'hidden at lg+')
 
   // Info + theme now live inside the panel, under the title — no info FAB anymore.
   check('desktop: no info FAB floating on the page', (await page.$$('button[aria-label="About this site"]')).length === 1, 'only the in-panel one')
@@ -78,11 +78,11 @@ const visible = (page, sel) =>
   const canvas = await box(page, 'canvas')
   check('mobile: preview still visible', canvas.visible && canvas.w > 50, `canvas ${canvas.w}px wide`)
 
-  const fab = await visible(page, 'button[aria-expanded]')
+  const fab = await visible(page, '[data-panel-toggle]')
   check('mobile: burger button is present', fab)
 
-  const fabBox = await box(page, 'button[aria-expanded]')
-  const fabPos = await page.$eval('button[aria-expanded]', (el) => {
+  const fabBox = await box(page, '[data-panel-toggle]')
+  const fabPos = await page.$eval('[data-panel-toggle]', (el) => {
     const r = el.getBoundingClientRect()
     return { bottomGap: Math.round(innerHeight - r.bottom), rightGap: Math.round(innerWidth - r.right) }
   })
@@ -91,7 +91,7 @@ const visible = (page, sel) =>
   // It floats above the screenshot strip rather than beside it, so the preview and the chips get
   // the full width. Overlapping the bottom of the preview is fine; overlapping the chips is not.
   const overStrip = await page.evaluate(() => {
-    const fab = document.querySelector('button[aria-expanded]').getBoundingClientRect()
+    const fab = document.querySelector('[data-panel-toggle]').getBoundingClientRect()
     const nav = document.querySelector('nav').getBoundingClientRect()
     const hits = (a, b) => !(a.bottom <= b.top || a.top >= b.bottom || a.right <= b.left || a.left >= b.right)
     return { overlaps: hits(fab, nav), gap: Math.round(nav.top - fab.bottom) }
@@ -99,7 +99,7 @@ const visible = (page, sel) =>
   check('mobile: burger clears the screenshot strip', !overStrip.overlaps, `${overStrip.gap}px above the chips`)
 
   // Open it.
-  await page.click('button[aria-expanded]')
+  await page.click('[data-panel-toggle]')
   await new Promise((r) => setTimeout(r, 100))
   const midSlide = await box(page, 'aside')
   await new Promise((r) => setTimeout(r, 500))
@@ -115,7 +115,7 @@ const visible = (page, sel) =>
   check('mobile: preview still on screen with panel open', canvasOpen.visible && canvasOpen.x < opened.x, `canvas x=${canvasOpen.x}`)
 
   // The burger stays visible and on top of the panel — it is the only close control now.
-  const fabState = await page.$eval('button[aria-expanded]', (el) => {
+  const fabState = await page.$eval('[data-panel-toggle]', (el) => {
     const s = getComputedStyle(el)
     return { opacity: s.opacity, pointerEvents: s.pointerEvents, z: Number(s.zIndex) }
   })
@@ -138,7 +138,7 @@ const visible = (page, sel) =>
     aside.scrollTop = aside.scrollHeight
     const buttons = [...aside.querySelectorAll('button')]
     const last = buttons[buttons.length - 1].getBoundingClientRect()
-    const fab = document.querySelector('button[aria-expanded]').getBoundingClientRect()
+    const fab = document.querySelector('[data-panel-toggle]').getBoundingClientRect()
     const overlaps = !(last.bottom < fab.top || last.top > fab.bottom || last.right < fab.left || last.left > fab.right)
     return { overlaps, lastBottom: Math.round(last.bottom), fabTop: Math.round(fab.top), visible: last.bottom <= innerHeight + 1 }
   })
@@ -151,12 +151,12 @@ const visible = (page, sel) =>
   await page.screenshot({ path: '/tmp/studio-mobile-open.png' })
 
   // The burger closes the panel too.
-  await page.click('button[aria-expanded]')
+  await page.click('[data-panel-toggle]')
   await new Promise((r) => setTimeout(r, 500))
   check('mobile: burger closes the panel', (await box(page, 'aside')).x >= vw - 1)
 
   // Re-open, then close via the backdrop.
-  await page.click('button[aria-expanded]')
+  await page.click('[data-panel-toggle]')
   await new Promise((r) => setTimeout(r, 500))
   await page.mouse.click(20, 400)
   await new Promise((r) => setTimeout(r, 500))

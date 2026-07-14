@@ -1,10 +1,14 @@
 /**
- * Checks that the user's work survives a reload — the images included, which is the whole point
- * of storing projects in IndexedDB rather than designs in localStorage.
+ * The two ways a project is kept, end to end:
+ *
+ * - the browser's database, so the work survives a reload, images included;
+ * - the .zip, so it survives the browser — saved, wiped, and opened back to the same pixels.
  *
  * Usage: npm run dev  (in one shell)
  *        node scripts/verify-project.mjs
  */
+import { execSync } from 'node:child_process'
+import { writeFileSync } from 'node:fs'
 import puppeteer from 'puppeteer-core'
 import { resetStorage } from './storage.mjs'
 
@@ -159,6 +163,142 @@ check(
   (await imageCount()) === 2,
   `${await imageCount()} images left`,
 )
+
+/* ---------------------------------------------------------------------------------------------
+ * The project file. The database survives a reload; this has to survive the browser.
+ * ------------------------------------------------------------------------------------------- */
+
+// Put the deck back to two screenshots, so the file has something to carry.
+await page.click('[data-strip-add]')
+await page.waitForFunction(() => document.querySelectorAll('[data-strip-chip]').length === 2)
+await upload(OTHER)
+await page.select('[data-device-select]', 'iphone-6.5')
+await page.waitForFunction(() => document.querySelector('canvas').width === 1242)
+
+const [firstChip] = await page.$$('[data-strip-chip]')
+await firstChip.click()
+await page.waitForFunction(
+  () => document.querySelector('div[class*="border-dashed"]').textContent.includes('sample-screenshot'),
+  { timeout: 10000 },
+)
+const savedIphone = await canvasPng()
+await page.select('[data-device-select]', 'ipad-13')
+await page.waitForFunction(() => document.querySelector('canvas').width === 2064)
+const savedIpad = await canvasPng()
+await page.select('[data-device-select]', 'iphone-6.5')
+await page.waitForFunction(() => document.querySelector('canvas').width === 1242)
+
+// Catch the download instead of letting it land in the downloads folder.
+await page.evaluate(() => {
+  window.__saved = null
+  const create = URL.createObjectURL
+  URL.createObjectURL = (blob) => {
+    window.__saved = blob
+    return create.call(URL, blob)
+  }
+  HTMLAnchorElement.prototype.click = function () {
+    window.__name = this.download
+  }
+})
+
+const openMenu = async () => {
+  await page.click('[data-export-menu]')
+  await page.waitForSelector('[data-export-list]')
+}
+await openMenu()
+await page.click('[data-export-item="project"]')
+await page.waitForFunction(() => window.__saved !== null, { timeout: 20000 })
+
+const saved = await page.evaluate(async () => {
+  const bytes = new Uint8Array(await window.__saved.arrayBuffer())
+  let binary = ''
+  for (const b of bytes) binary += String.fromCharCode(b)
+  return { name: window.__name, type: window.__saved.type, b64: btoa(binary) }
+})
+check(
+  'saving a project hands back one dated zip',
+  saved.type === 'application/zip' && /^screenshot-studio-project-\d{4}-\d{2}-\d{2}\.zip$/.test(saved.name),
+  `${saved.type}, ${saved.name}`,
+)
+
+const zipPath = '/tmp/studio-project.zip'
+writeFileSync(zipPath, Buffer.from(saved.b64, 'base64'))
+// The real unzip is the judge: an archive only this app can read is not an archive.
+check('the zip is valid to a real unzip', execSync(`unzip -t ${zipPath}`).toString().includes('No errors'))
+
+const listed = execSync(`unzip -Z1 ${zipPath}`).toString().trim().split('\n')
+check(
+  'it holds a manifest and one entry per image',
+  listed.length === 4 && listed[0] === 'project.json',
+  listed.join(', '),
+)
+check(
+  'images are filed under their device, not named after the caption',
+  listed.includes('images/iphone-6.5/1.png') &&
+    listed.includes('images/iphone-6.5/2.png') &&
+    listed.includes('images/ipad-13/1.png'),
+  listed.join(', '),
+)
+
+const manifest = JSON.parse(execSync(`unzip -p ${zipPath} project.json`).toString())
+check('the manifest says what it is', manifest.kind === 'screenshot-studio-project' && manifest.version === 1)
+check(
+  'it carries the device by id, never its geometry',
+  manifest.deviceId === 'iphone-6.5' && !JSON.stringify(manifest).includes('radius'),
+)
+check(
+  'every screenshot carries its own full design',
+  manifest.devices['iphone-6.5'].slides[0].design.backgroundColor === '#7B2D8E' &&
+    manifest.devices['iphone-6.5'].slides[0].design.sentence.includes('MyApp'),
+  manifest.devices['iphone-6.5'].slides[0].design.backgroundColor,
+)
+check(
+  'each image records the file it came from',
+  manifest.images['images/iphone-6.5/1.png'].name === 'sample-screenshot.png',
+  JSON.stringify(manifest.images['images/iphone-6.5/1.png']),
+)
+
+// Now throw everything away — the database included — and open the file back.
+await resetStorage(page)
+await page.reload({ waitUntil: 'networkidle0' })
+await page.waitForSelector('canvas')
+check('after wiping, the canvas is back to the empty template', (await canvasPng()) !== savedIphone)
+
+const projectInput = async () => await page.$('input[accept=".zip,application/zip"]')
+await (await projectInput()).uploadFile(zipPath)
+await page.waitForSelector('[data-confirm-yes]', { visible: true })
+check('loading asks before it replaces the current work', true)
+await page.click('[data-confirm-yes]')
+await page.waitForFunction(() => !document.querySelector('[data-busy]'), { timeout: 30000 })
+await new Promise((r) => setTimeout(r, 400))
+
+check('the loaded project is the same pixels it was saved as', (await canvasPng()) === savedIphone)
+check('the deck comes back whole', (await chips()).length === 2, (await chips()).join(' '))
+check(
+  'the file name of each image survives the round trip',
+  (await dropZone()).includes('sample-screenshot.png'),
+  await dropZone(),
+)
+await page.select('[data-device-select]', 'ipad-13')
+await page.waitForFunction(() => document.querySelector('canvas').width === 2064)
+check('the other device came back too', (await canvasPng()) === savedIpad)
+
+// A loaded project is saved on arrival, so closing the tab does not lose what was just opened.
+await page.reload({ waitUntil: 'networkidle0' })
+await page.waitForSelector('canvas')
+await new Promise((r) => setTimeout(r, 600))
+await page.select('[data-device-select]', 'iphone-6.5')
+await page.waitForFunction(() => document.querySelector('canvas').width === 1242)
+check('a loaded project is kept, so a reload does not undo the load', (await canvasPng()) === savedIphone)
+
+// A file that is not a project says so, and leaves the work alone.
+const intact = await canvasPng()
+await (await projectInput()).uploadFile('tests/fixtures/sample-screenshot.png')
+await page.waitForSelector('[data-confirm-yes]', { visible: true })
+await page.click('[data-confirm-yes]')
+await page.waitForSelector('[data-load-error]', { timeout: 15000 })
+check('a file that is not a zip is reported, not swallowed', await page.$eval('[data-load-error]', (e) => e.textContent.length > 0))
+check('and the work in progress is untouched', (await canvasPng()) === intact)
 
 check('no console errors', errors.length === 0, errors[0])
 
