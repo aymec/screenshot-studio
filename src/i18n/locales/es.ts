@@ -59,7 +59,7 @@ export const es: Dict = {
   resetAll: 'Restablecer todo',
   resetAllTitle: '¿Restablecer todo?',
   resetAllBody:
-    'Se pierden todas las capturas de todos los dispositivos, con sus imágenes, y también la copia guardada en este navegador. Guarda tu proyecto antes si quieres conservarlo. Esto no se puede deshacer.',
+    'Se eliminarán todas las capturas de todos los dispositivos y todo lo guardado en este navegador. ¿Restablecer ahora?',
   storageFull: 'Este navegador se ha quedado sin espacio, así que tus imágenes ya no se guardan. Libera espacio o guarda tu proyecto en un archivo.',
 
   aboutTitle: 'Acerca de este sitio',

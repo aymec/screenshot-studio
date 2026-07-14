@@ -59,7 +59,7 @@ export const it: Dict = {
   resetAll: 'Reimposta tutto',
   resetAllTitle: 'Reimpostare tutto?',
   resetAllBody:
-    'Spariscono tutte le schermate di ogni dispositivo, immagini comprese, e anche la copia salvata in questo browser. Salva prima il progetto se vuoi conservarlo. L’operazione non è annullabile.',
+    'Verranno eliminate tutte le schermate di tutti i dispositivi e tutto ciò che è salvato in questo browser. Reimpostare ora?',
   storageFull: 'Questo browser ha esaurito lo spazio, quindi le tue immagini non vengono più salvate. Libera spazio oppure salva il progetto in un file.',
 
   aboutTitle: 'Informazioni su questo sito',

@@ -59,7 +59,7 @@ export const de: Dict = {
   resetAll: 'Alles zurücksetzen',
   resetAllTitle: 'Alles zurücksetzen?',
   resetAllBody:
-    'Alle Screenshots aller Geräte verschwinden, Bilder eingeschlossen, und auch die in diesem Browser gespeicherte Kopie. Sichere dein Projekt vorher, wenn du es behalten willst. Das lässt sich nicht rückgängig machen.',
+    'Alle Screenshots aller Geräte und alles in diesem Browser Gespeicherte werden gelöscht. Jetzt zurücksetzen?',
   storageFull: 'Dieser Browser hat keinen Speicherplatz mehr, deine Bilder werden nicht mehr gespeichert. Gib Speicher frei oder sichere dein Projekt in einer Datei.',
 
   aboutTitle: 'Über diese Website',
