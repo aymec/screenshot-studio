@@ -75,7 +75,7 @@ The strip's shape is part of the spec, and `scripts/verify-screenshots.mjs` pins
 - Delete is a 16px chip hanging 4px under the selected chip (from the chip itself, so it rides up
   with it), behind a yes/no `ConfirmModal` — it throws away an image, a caption, and colors. It is
   absent on a deck of one: a device must have a screenshot to render, and clearing one is what
-  Reset is for.
+  "Reset all" is for.
 - "Export all" raises `BusyOverlay` for the length of the loop. The canvas is the preview, so the
   user watches it flip through the whole deck as it renders; without the spinner that reads as the
   app malfunctioning. The overlay also blocks edits mid-loop, which would otherwise land in the zip.
@@ -134,6 +134,17 @@ behind one `ExportMenu`. It is a real menu (arrows, Enter, Escape, click-outside
 **disable rather than disappear**: rows that move between one opening and the next have to be read
 every time. Loading a project is deliberately *not* in it — it is not an export, and it replaces
 everything on every device, so it is its own button behind a `ConfirmModal`.
+
+"Reset all" clears every device's deck **and deletes the project from the database**, so it really
+does put the app back where it started. (It used to reset the selected screenshot's design only,
+which left the images and every other screenshot in place.) It deletes the stored project outright
+rather than letting the autosave overwrite it — the autosave writes what state holds, and the point
+is that nothing should be left holding it.
+
+Three `ConfirmModal`s are mounted at once and **fade rather than unmount**, so each takes a `name`
+(`data-confirm="reset-all"`). Without it, "the yes button" is whichever one is first in the DOM: a
+`page.click('[data-confirm-yes]')` hits the *closed* dialog's coordinates, and since the dialogs
+have different heights it lands on whatever is underneath. Always scope to the dialog.
 
 ## Dead space is not a control
 

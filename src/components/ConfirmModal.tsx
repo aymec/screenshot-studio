@@ -2,6 +2,12 @@ import type { TKey } from '../i18n'
 
 interface Props {
   open: boolean
+  /**
+   * Which confirmation this is. Several of them are mounted at once — they fade rather than
+   * unmount — so "the yes button" is ambiguous without it, to a test and to anything else
+   * reaching into the page.
+   */
+  name: string
   /** What is about to be destroyed, spelled out — "Delete screenshot 3?" beats "Are you sure?". */
   title: string
   body: string
@@ -11,13 +17,13 @@ interface Props {
 }
 
 /** Yes/no gate in front of anything that throws work away. */
-export function ConfirmModal({ open, title, body, onConfirm, onCancel, t }: Props) {
+export function ConfirmModal({ open, name, title, body, onConfirm, onCancel, t }: Props) {
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-label={title}
-      data-confirm
+      data-confirm={name}
       className={`fixed inset-0 z-40 flex items-center justify-center p-4 transition-opacity duration-200 ${
         open ? 'opacity-100' : 'pointer-events-none opacity-0'
       }`}

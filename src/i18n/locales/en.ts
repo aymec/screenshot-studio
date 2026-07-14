@@ -61,7 +61,10 @@ export const en = {
   loadErrorNotAProject: 'That zip is not a Screenshot Studio project.',
   loadErrorTooNew: 'That project was saved by a newer version of this app.',
 
-  reset: 'Reset to template defaults',
+  resetAll: 'Reset all',
+  resetAllTitle: 'Reset everything?',
+  resetAllBody:
+    'Every screenshot on every device goes, images and all, and so does the copy saved in this browser. Save your project first if you want to keep it. This cannot be undone.',
   storageFull: 'This browser is out of storage, so your images are no longer being saved. Free up space, or save your project to a file.',
 
   aboutTitle: 'About this site',

@@ -56,7 +56,10 @@ export const it: Dict = {
   loadErrorUnreadable: 'Impossibile leggere il file. Potrebbe essere danneggiato o non essere un archivio zip.',
   loadErrorNotAProject: 'Questo zip non è un progetto di Screenshot Studio.',
   loadErrorTooNew: 'Questo progetto è stato salvato da una versione più recente dell’app.',
-  reset: 'Ripristina il modello',
+  resetAll: 'Reimposta tutto',
+  resetAllTitle: 'Reimpostare tutto?',
+  resetAllBody:
+    'Spariscono tutte le schermate di ogni dispositivo, immagini comprese, e anche la copia salvata in questo browser. Salva prima il progetto se vuoi conservarlo. L’operazione non è annullabile.',
   storageFull: 'Questo browser ha esaurito lo spazio, quindi le tue immagini non vengono più salvate. Libera spazio oppure salva il progetto in un file.',
 
   aboutTitle: 'Informazioni su questo sito',

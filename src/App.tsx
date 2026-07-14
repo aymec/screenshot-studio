@@ -6,7 +6,15 @@ import { InfoModal } from './components/InfoModal'
 import { ScreenshotStrip } from './components/ScreenshotStrip'
 import { blobToImage, download, exportPng, loadImage, render, toPng } from './render'
 import { zip } from './zip'
-import { CURRENT_SLOT, getImages, getProject, isQuotaError, requestPersistence, saveProject } from './db'
+import {
+  CURRENT_SLOT,
+  deleteProject,
+  getImages,
+  getProject,
+  isQuotaError,
+  requestPersistence,
+  saveProject,
+} from './db'
 import {
   blankDeck,
   emptyDecks,
@@ -21,14 +29,7 @@ import {
   type LoadFailure,
   type Slide,
 } from './project'
-import {
-  DEFAULT_DESIGN,
-  DEFAULT_PRESET,
-  MAX_SCREENSHOTS,
-  PRESETS,
-  presetById,
-  type Design,
-} from './template'
+import { DEFAULT_PRESET, MAX_SCREENSHOTS, PRESETS, presetById, type Design } from './template'
 import { useTheme } from './theme'
 import { useI18n } from './i18n'
 
@@ -121,6 +122,7 @@ export default function App() {
   const [panelOpen, setPanelOpen] = useState(false)
   const [infoOpen, setInfoOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [confirmReset, setConfirmReset] = useState(false)
   // What the app is busy doing, if anything. All three raise the same overlay: each one takes long
   // enough to look like a hang, and each one must block edits that would otherwise land in the
   // middle of it — a design change mid-export would be drawn into the zip.
@@ -142,6 +144,7 @@ export default function App() {
       setPanelOpen(false)
       setInfoOpen(false)
       setConfirmDelete(false)
+      setConfirmReset(false)
       setPendingProject(null)
     }
     window.addEventListener('keydown', onKey)
@@ -441,10 +444,28 @@ export default function App() {
     }
   }, [pendingProject])
 
-  const handleReset = useCallback(
-    () => patchSlide(deviceId, index, (s) => ({ ...s, design: DEFAULT_DESIGN })),
-    [patchSlide, deviceId, index],
-  )
+  // Start over: every device back to one blank screenshot, and the project dropped from storage.
+  //
+  // This used to reset the selected screenshot's design and nothing else, which left the images,
+  // the other screenshots, and the other devices' decks in place — so a button called "Reset" did
+  // not get you back to where the app started. It now clears the lot, which is why it asks first.
+  //
+  // The stored project is deleted outright rather than left for the autosave to overwrite: the
+  // autosave writes what state holds, and the point here is that nothing should be left holding it.
+  // The blank state it then writes carries no image keys, so the images go with it.
+  const handleResetAll = useCallback(() => {
+    setConfirmReset(false)
+    setLoadError(null)
+    setDecks(emptyDecks())
+    setCursors({})
+    setDeviceId(DEFAULT_PRESET.id)
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch {
+      // Private mode: there was nothing there to remove.
+    }
+    deleteProject(CURRENT_SLOT).catch(console.error)
+  }, [])
 
   return (
     <div className="flex h-full bg-slate-100 font-sans text-slate-900 dark:bg-slate-950 dark:text-slate-100">
@@ -497,7 +518,7 @@ export default function App() {
         onSaveProject={handleSaveProject}
         onLoadProject={handleLoadProject}
         loadError={loadError}
-        onReset={handleReset}
+        onResetAll={() => setConfirmReset(true)}
         storageFull={storageFull}
         count={deck.length}
         index={index}
@@ -540,6 +561,7 @@ export default function App() {
 
       <ConfirmModal
         open={confirmDelete}
+        name="delete-screenshot"
         title={t('deleteScreenshot', { n: index + 1 })}
         body={t('deleteScreenshotBody')}
         onConfirm={handleDelete}
@@ -547,10 +569,23 @@ export default function App() {
         t={t}
       />
 
+      {/* Reset throws away every screenshot on every device, and the copy in storage with them.
+          Nothing about a button in the panel's footer says that on its own. */}
+      <ConfirmModal
+        open={confirmReset}
+        name="reset-all"
+        title={t('resetAllTitle')}
+        body={t('resetAllBody')}
+        onConfirm={handleResetAll}
+        onCancel={() => setConfirmReset(false)}
+        t={t}
+      />
+
       {/* Opening a project replaces every screenshot on every device, which is not something to
           discover afterwards. */}
       <ConfirmModal
         open={pendingProject !== null}
+        name="load-project"
         title={t('loadProjectTitle')}
         body={t('loadProjectBody')}
         onConfirm={confirmLoadProject}

@@ -140,7 +140,7 @@ check('the images are stored, one per screenshot', (await imageCount()) === 3, `
 const [, chip2] = await page.$$('[data-strip-chip]')
 await chip2.click()
 await page.click('[data-strip-delete]')
-await page.click('[data-confirm-yes]')
+await page.click('[data-confirm="delete-screenshot"] [data-confirm-yes]')
 await page.waitForFunction(() => document.querySelectorAll('[data-strip-chip]').length === 1)
 // The save that follows the delete is what collects the garbage.
 await page.waitForFunction(
@@ -266,9 +266,9 @@ check('after wiping, the canvas is back to the empty template', (await canvasPng
 
 const projectInput = async () => await page.$('input[accept=".zip,application/zip"]')
 await (await projectInput()).uploadFile(zipPath)
-await page.waitForSelector('[data-confirm-yes]', { visible: true })
+await page.waitForFunction(() => getComputedStyle(document.querySelector('[data-confirm="load-project"]')).opacity === '1')
 check('loading asks before it replaces the current work', true)
-await page.click('[data-confirm-yes]')
+await page.click('[data-confirm="load-project"] [data-confirm-yes]')
 await page.waitForFunction(() => !document.querySelector('[data-busy]'), { timeout: 30000 })
 await new Promise((r) => setTimeout(r, 400))
 
@@ -294,11 +294,68 @@ check('a loaded project is kept, so a reload does not undo the load', (await can
 // A file that is not a project says so, and leaves the work alone.
 const intact = await canvasPng()
 await (await projectInput()).uploadFile('tests/fixtures/sample-screenshot.png')
-await page.waitForSelector('[data-confirm-yes]', { visible: true })
-await page.click('[data-confirm-yes]')
+await page.waitForFunction(() => getComputedStyle(document.querySelector('[data-confirm="load-project"]')).opacity === '1')
+await page.click('[data-confirm="load-project"] [data-confirm-yes]')
 await page.waitForSelector('[data-load-error]', { timeout: 15000 })
 check('a file that is not a zip is reported, not swallowed', await page.$eval('[data-load-error]', (e) => e.textContent.length > 0))
 check('and the work in progress is untouched', (await canvasPng()) === intact)
+
+/* ---------------------------------------------------------------------------------------------
+ * Reset all: back to a blank project, in the app *and* in storage.
+ * ------------------------------------------------------------------------------------------- */
+
+// The project loaded above is still open, across two devices, with images on it.
+await page.select('[data-device-select]', 'iphone-6.5')
+await page.waitForFunction(() => document.querySelector('canvas').width === 1242)
+check('there is a project to reset', (await imageCount()) > 0, `${await imageCount()} images stored`)
+
+await page.click('[data-reset-all]')
+await page.waitForFunction(() => getComputedStyle(document.querySelector('[data-confirm="reset-all"]')).opacity === '1')
+check('reset asks before it throws the project away', true)
+
+// Saying no leaves it exactly as it was — a confirmation that does not protect anything is a lie.
+const beforeReset = await canvasPng()
+await page.click('[data-confirm="reset-all"] [data-confirm-no]')
+await new Promise((r) => setTimeout(r, 300))
+check('answering no keeps the project', (await canvasPng()) === beforeReset)
+check('and keeps its images in storage', (await imageCount()) > 0, `${await imageCount()} images`)
+
+await page.click('[data-reset-all]')
+await page.waitForFunction(() => getComputedStyle(document.querySelector('[data-confirm="reset-all"]')).opacity === '1')
+await page.click('[data-confirm="reset-all"] [data-confirm-yes]')
+await page.waitForFunction(() => document.querySelectorAll('[data-strip-chip]').length === 1)
+
+check('the deck is back to a single screenshot', (await chips()).length === 1)
+check('the caption and colors are back to the template', (await canvasPng()) !== beforeReset)
+check('the screenshot is gone with it', !(await dropZone()).includes('sample-screenshot.png'), await dropZone())
+
+// The other device is reset too — this is a project-wide reset, not a per-device one.
+await page.select('[data-device-select]', 'ipad-13')
+await page.waitForFunction(() => document.querySelector('canvas').width === 2064)
+check('the other device is cleared as well', (await chips()).length === 1 && !(await dropZone()).includes('golden-panel.png'), await dropZone())
+
+// And it is gone from storage, not just from the screen.
+await page.waitForFunction(
+  () =>
+    new Promise((resolve) => {
+      const request = indexedDB.open('screenshot-studio')
+      request.onsuccess = () => {
+        const tx = request.result.transaction('images', 'readonly')
+        const count = tx.objectStore('images').count()
+        count.onsuccess = () => {
+          request.result.close()
+          resolve(count.result === 0)
+        }
+      }
+    }),
+  { timeout: 5000 },
+).catch(() => {})
+check('every image is dropped from storage', (await imageCount()) === 0, `${await imageCount()} images left`)
+
+await page.reload({ waitUntil: 'networkidle0' })
+await page.waitForSelector('canvas')
+await new Promise((r) => setTimeout(r, 600))
+check('the reset survives a reload — nothing comes back', (await chips()).length === 1 && (await imageCount()) === 0)
 
 check('no console errors', errors.length === 0, errors[0])
 

@@ -56,7 +56,10 @@ export const zhTW: Dict = {
   loadErrorUnreadable: '無法讀取這個檔案。它可能已損毀，或者不是 zip 壓縮檔。',
   loadErrorNotAProject: '這個 zip 不是 Screenshot Studio 專案。',
   loadErrorTooNew: '這個專案是由較新版本的應用程式儲存的。',
-  reset: '還原範本預設值',
+  resetAll: '全部重設',
+  resetAllTitle: '要全部重設嗎？',
+  resetAllBody:
+    '所有裝置上的截圖連同圖片都會消失，儲存在這個瀏覽器中的副本也會一併刪除。想保留的話，請先儲存專案。此操作無法復原。',
   storageFull: '這個瀏覽器的儲存空間已滿，圖片不再儲存。請釋出空間，或將專案儲存為檔案。',
 
   aboutTitle: '關於本站',

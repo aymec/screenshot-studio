@@ -349,13 +349,13 @@ await (await del()).click()
 await settle()
 check('the delete chip opens a confirmation', await shownModal())
 
-await page.click('[data-confirm-no]')
+await page.click('[data-confirm="delete-screenshot"] [data-confirm-no]')
 await settle()
 check('answering no keeps the screenshot', !(await shownModal()) && (await n('[data-strip-chip]')) === 10)
 
 await (await del()).click()
 await settle()
-await page.click('[data-confirm-yes]')
+await page.click('[data-confirm="delete-screenshot"] [data-confirm-yes]')
 await settle()
 check('answering yes deletes the screenshot', (await n('[data-strip-chip]')) === 9)
 check('the confirmation closes on yes', !(await shownModal()))
@@ -375,7 +375,7 @@ check('the deletion survives a reload', await (async () => {
 while ((await n('[data-strip-chip]')) > 1) {
   await (await del()).click()
   await settle()
-  await page.click('[data-confirm-yes]')
+  await page.click('[data-confirm="delete-screenshot"] [data-confirm-yes]')
   await settle()
 }
 check('the last screenshot cannot be deleted', !(await del()), 'no delete chip on a deck of one')

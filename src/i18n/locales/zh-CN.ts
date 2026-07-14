@@ -56,7 +56,10 @@ export const zhCN: Dict = {
   loadErrorUnreadable: '无法读取该文件。它可能已损坏，或者不是 zip 压缩包。',
   loadErrorNotAProject: '这个 zip 不是 Screenshot Studio 项目。',
   loadErrorTooNew: '该项目由更新版本的应用保存。',
-  reset: '恢复模板默认值',
+  resetAll: '全部重置',
+  resetAllTitle: '要全部重置吗？',
+  resetAllBody:
+    '所有设备上的截图连同图片都会消失，保存在此浏览器中的副本也会一并删除。想保留的话，请先保存项目。此操作无法撤销。',
   storageFull: '此浏览器存储空间已满，图片不再保存。请释放空间，或将项目保存为文件。',
 
   aboutTitle: '关于本站',

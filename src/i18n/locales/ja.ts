@@ -56,7 +56,10 @@ export const ja: Dict = {
   loadErrorUnreadable: 'このファイルは読み込めませんでした。破損しているか、zip アーカイブではない可能性があります。',
   loadErrorNotAProject: 'この zip は Screenshot Studio のプロジェクトではありません。',
   loadErrorTooNew: 'このプロジェクトは、より新しいバージョンのアプリで保存されています。',
-  reset: 'テンプレートの初期値に戻す',
+  resetAll: 'すべてリセット',
+  resetAllTitle: 'すべてリセットしますか？',
+  resetAllBody:
+    'すべてのデバイスのスクリーンショットが画像ごと消え、このブラウザーに保存されたものも削除されます。残したい場合は先にプロジェクトを保存してください。元に戻せません。',
   storageFull: 'このブラウザーの保存容量が足りないため、画像は保存されなくなりました。空き容量を増やすか、プロジェクトをファイルに保存してください。',
 
   aboutTitle: 'このサイトについて',
