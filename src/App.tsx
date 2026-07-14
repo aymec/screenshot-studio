@@ -6,6 +6,17 @@ import { InfoModal } from './components/InfoModal'
 import { ScreenshotStrip } from './components/ScreenshotStrip'
 import { blobToImage, download, exportPng, loadImage, render, toPng } from './render'
 import { zip } from './zip'
+import { CURRENT_SLOT, getImages, getProject, isQuotaError, requestPersistence, saveProject } from './db'
+import {
+  blankDeck,
+  emptyDecks,
+  fromProject,
+  imageKeys,
+  sanitizeDesign,
+  toProject,
+  type Decks,
+  type Slide,
+} from './project'
 import {
   DEFAULT_DESIGN,
   DEFAULT_PRESET,
@@ -20,51 +31,29 @@ import { useI18n } from './i18n'
 const STORAGE_KEY = 'screenshot-studio:design'
 const DEVICE_KEY = 'screenshot-studio:device'
 
+/** The project the app autosaves into as it is edited. */
+const PROJECT_NAME = 'Untitled project'
+
 /**
- * The capture dropped onto a screenshot: the decoded image the canvas draws, and the bytes of
- * the file it was decoded from.
+ * Restore each device's designs from localStorage.
  *
- * The bytes are kept, not just the image, because they are what gets written to a saved project.
- * An HTMLImageElement can only be turned back into a file by re-encoding it through a canvas,
- * which would save a re-compressed PNG of whatever the user picked rather than the file itself.
- */
-interface Shot {
-  img: HTMLImageElement
-  name: string
-  bytes: Uint8Array
-  type: string
-}
-
-/** One marketing screenshot: the panel's design, and the phone capture dropped into it. */
-interface Slide {
-  design: Design
-  /** The image and the file it came from. Never persisted — it lives only in this session. */
-  shot: Shot | null
-}
-
-/** A device's screenshots, in the order they will be exported. Every device has its own. */
-type Decks = Record<string, Slide[]>
-
-const blankDeck = (): Slide[] => [{ design: DEFAULT_DESIGN, shot: null }]
-
-/**
- * Restore each device's designs. Only the designs are stored — an image is a live
- * HTMLImageElement, so a reload always starts with empty screens.
+ * This is no longer where the user's work lives — IndexedDB is, images included, and it wins as
+ * soon as it has been read. But it is read *synchronously*, so it is what the app holds during
+ * the first paint, it is what a browser that refuses to open a database keeps forever, and it is
+ * what the first autosave migrates into the database on an existing user's next visit.
  *
  * Storage from before this app had more than one screenshot per device holds a single
  * shared Design; it is lifted into every device's first slide rather than dropped.
  */
 function loadDecks(): Decks {
-  const decks: Decks = Object.fromEntries(PRESETS.map((p) => [p.id, blankDeck()]))
+  const decks = emptyDecks()
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return decks
     const parsed: unknown = JSON.parse(raw)
 
     const slidesOf = (designs: Partial<Design>[]): Slide[] =>
-      designs
-        .slice(0, MAX_SCREENSHOTS)
-        .map((d) => ({ design: { ...DEFAULT_DESIGN, ...d }, shot: null }))
+      designs.slice(0, MAX_SCREENSHOTS).map((d) => ({ design: sanitizeDesign(d), shot: null }))
 
     // The one-design-per-app shape: a bare object with a caption in it.
     if (parsed && typeof parsed === 'object' && 'sentence' in parsed) {
@@ -120,6 +109,11 @@ export default function App() {
   const [cursors, setCursors] = useState<Record<string, number>>({})
   const [frame, setFrame] = useState<HTMLImageElement | null>(null)
   const [fontsReady, setFontsReady] = useState(false)
+  // The database is read asynchronously, so — exactly like the webfont — the first render waits
+  // for it. Painting before it lands would show the user the empty template for a frame and then
+  // snap to their actual work.
+  const [hydrated, setHydrated] = useState(false)
+  const [storageFull, setStorageFull] = useState(false)
   const [panelOpen, setPanelOpen] = useState(false)
   const [infoOpen, setInfoOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -181,11 +175,63 @@ export default function App() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(designs))
   }, [decks])
 
+  // Read the work in progress — designs *and* images — back out of the database. Every image is
+  // decoded before any of it reaches state, so the decks land in one write: there is no window in
+  // which half a project is on screen.
+  //
+  // The selected device is deliberately *not* restored from here. It is already persisted, in
+  // localStorage, and read synchronously; taking it from the project as well would give it two
+  // sources of truth, and the stale one would win — switch device, reload before the autosave
+  // debounce has run, and the app would bounce you back to the device you just left. A project
+  // the user explicitly *loads* does select its device: that is a deliberate act, not a boot.
+  useEffect(() => {
+    let cancelled = false
+    getProject(CURRENT_SLOT)
+      .then(async (project) => {
+        if (!project || cancelled) return
+        const restored = await fromProject(project, await getImages(imageKeys(project)))
+        if (cancelled) return
+        setDecks(restored.decks)
+        setCursors(restored.cursors)
+      })
+      // No database (private mode, or a browser that refuses one): the designs loaded from
+      // localStorage stand, which is the behavior this app had before it stored images at all.
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setHydrated(true)
+      })
+    // A hint, not a guarantee, and nothing waits on the answer.
+    void requestPersistence()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Autosave, on every edit and with no debounce: what gets written here is the designs, a few
+  // hundred bytes, because the images are keyed separately and each is written only once. A
+  // debounce would buy nothing and cost correctness — a reload can outrun it, and the record it
+  // had not yet written would load back over the edit the user just made.
+  //
+  // It cannot run before hydration, or the empty template the app starts with would be written
+  // straight over the project it is in the middle of reading.
+  useEffect(() => {
+    if (!hydrated) return
+    const { project, images } = toProject(CURRENT_SLOT, PROJECT_NAME, decks, cursors, deviceId)
+    saveProject(project, images)
+      .then(() => setStorageFull(false))
+      .catch((e) => {
+        // Out of quota is the one failure the user has to hear about: their images are not being
+        // kept, and only they can decide what to do about it.
+        if (isQuotaError(e)) setStorageFull(true)
+        else console.error(e)
+      })
+  }, [decks, cursors, deviceId, hydrated])
+
   useEffect(() => {
     const ctx = canvasRef.current?.getContext('2d')
-    if (!ctx || !fontsReady) return
+    if (!ctx || !fontsReady || !hydrated) return
     render(ctx, { preset, design, screenshot: slide.shot?.img ?? null, frame })
-  }, [preset, design, slide, frame, fontsReady])
+  }, [preset, design, slide, frame, fontsReady, hydrated])
 
   /** Replace the screenshot the edit was made on, leaving the rest of the deck alone. */
   const patchSlide = useCallback(
@@ -259,9 +305,11 @@ export default function App() {
       const load = async () => {
         const bytes = new Uint8Array(await file.arrayBuffer())
         const img = await blobToImage(bytes, file.type)
+        // The key is minted here, once, and travels with the image for as long as it is on this
+        // screenshot. The bytes under it never change, so a save can skip rewriting them.
         patchSlide(device, at, (s) => ({
           ...s,
-          shot: { img, name: file.name, bytes, type: file.type },
+          shot: { key: crypto.randomUUID(), img, name: file.name, bytes, type: file.type },
         }))
       }
       load().catch(console.error)
@@ -367,6 +415,7 @@ export default function App() {
         // nothing to zip — the button says so rather than downloading an empty file.
         canExportAll={deck.some((s) => s.shot)}
         onReset={handleReset}
+        storageFull={storageFull}
         count={deck.length}
         index={index}
         hasImage={!!slide.shot}

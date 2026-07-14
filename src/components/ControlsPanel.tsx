@@ -16,6 +16,8 @@ interface Props {
   /** False when not one screenshot in the deck has an image: there is nothing to put in the zip. */
   canExportAll: boolean
   onReset: () => void
+  /** The browser refused to store the project's images: the user's work is not being kept. */
+  storageFull: boolean
   /** Everything in the panel edits screenshot `index` of the device's `count` screenshots. */
   count: number
   index: number
@@ -216,6 +218,7 @@ export function ControlsPanel({
   onExportAll,
   canExportAll,
   onReset,
+  storageFull,
   count,
   index,
   hasImage,
@@ -455,6 +458,17 @@ export function ControlsPanel({
       </Field>
 
       <div className="mt-auto flex flex-col gap-2 pt-2">
+        {/* Silence here would be a lie: the user would go on editing a project the browser is no
+            longer keeping, and only find out on the reload that loses it. */}
+        {storageFull && (
+          <p
+            role="status"
+            data-storage-full
+            className="rounded-lg bg-amber-100 px-3 py-2 text-xs font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200"
+          >
+            {t('storageFull')}
+          </p>
+        )}
         <button
           onClick={onExport}
           className="w-full rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white transition hover:bg-blue-500 active:bg-blue-700"

@@ -48,6 +48,7 @@ export const en = {
   exportAll: 'Export all',
   exporting: 'Exporting…',
   reset: 'Reset to template defaults',
+  storageFull: 'This browser is out of storage, so your images are no longer being saved. Free up space, or save your project to a file.',
 
   aboutTitle: 'About this site',
   closeInfo: 'Close info',
@@ -72,7 +73,7 @@ export const en = {
     'The preview is the real canvas at full resolution, so the PNG you download is exactly what you see. Export the screenshot you are on, or the whole set at once.',
 
   modalFootnote:
-    'Your settings are saved in this browser and restored next time. The images are not — drop them in again after a reload.',
+    'Your work is saved in this browser — images included — and restored next time. Nothing is uploaded anywhere.',
   gotIt: 'Got it',
 } as const
 

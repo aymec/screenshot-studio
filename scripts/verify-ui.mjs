@@ -7,6 +7,7 @@
  *        node scripts/verify-ui.mjs
  */
 import puppeteer from 'puppeteer-core'
+import { resetStorage } from './storage.mjs'
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const SOURCE = 'tests/fixtures/sample-screenshot.png'
@@ -22,7 +23,7 @@ page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
 page.on('pageerror', (e) => errors.push(e.message))
 
 await page.goto('http://localhost:5173/', { waitUntil: 'networkidle0' })
-await page.evaluate(() => localStorage.clear())
+await resetStorage(page)
 await page.reload({ waitUntil: 'networkidle0' })
 
 const pixel = (x, y) =>

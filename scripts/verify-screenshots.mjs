@@ -5,6 +5,7 @@
 import { execSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 import puppeteer from 'puppeteer-core'
+import { resetStorage } from './storage.mjs'
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const SOURCE = 'tests/fixtures/sample-screenshot.png'
@@ -19,7 +20,7 @@ page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
 page.on('pageerror', (e) => errors.push(e.message))
 
 await page.goto('http://localhost:5173/', { waitUntil: 'networkidle0' })
-await page.evaluate(() => localStorage.clear())
+await resetStorage(page)
 await page.reload({ waitUntil: 'networkidle0' })
 await new Promise((r) => setTimeout(r, 400))
 
@@ -167,7 +168,8 @@ await page.select('[data-device-select]', 'iphone-6.5')
 await settle()
 check('switching back restores the iPhone deck', (await n('[data-strip-chip]')) === 10)
 
-// 9. Persistence: the designs of every screenshot survive a reload (the images do not).
+// 9. Persistence: every screenshot's design survives a reload, and so does its image — the
+//    project lives in IndexedDB, which holds the bytes, not just the designs.
 await page.reload({ waitUntil: 'networkidle0' })
 await new Promise((r) => setTimeout(r, 600))
 check('the whole deck persists across reload', (await n('[data-strip-chip]')) === 10)
@@ -176,8 +178,12 @@ await settle()
 check('each screenshot persists its own design', (await pixel(5, 5)) === '#7b2d8e', await pixel(5, 5))
 
 // 10. Export all: one zip, holding only the screenshots that actually have an image, each
-//     numbered by its place in the deck. A reload dropped the images, so put two back.
-check('"Export all" is disabled again once the images are gone', await disabled('[data-export-all]'))
+//     numbered by its place in the deck. Screenshot 1 came back from storage with its image, so
+//     the export is already live; screenshot 5 gets one too, to prove the numbering.
+check(
+  '"Export all" is still live after a reload, because the image came back',
+  !(await disabled('[data-export-all]')),
+)
 const upload = async (i) => {
   await chip(i)
   await settle()

@@ -47,6 +47,7 @@ export const es: Dict = {
   exportAll: 'Exportar todo',
   exporting: 'Exportando…',
   reset: 'Restablecer la plantilla',
+  storageFull: 'Este navegador se ha quedado sin espacio, así que tus imágenes ya no se guardan. Libera espacio o guarda tu proyecto en un archivo.',
 
   aboutTitle: 'Acerca de este sitio',
   closeInfo: 'Cerrar la información',
@@ -74,6 +75,6 @@ export const es: Dict = {
     'La vista previa es el lienzo real a resolución completa, así que el PNG que descargas es exactamente lo que ves. Exporta la captura que tienes delante o todo el conjunto de una vez.',
 
   modalFootnote:
-    'Tus ajustes se guardan en este navegador y se restauran la próxima vez. Las imágenes no: vuelve a soltarlas tras recargar.',
+    'Tu trabajo se guarda en este navegador —imágenes incluidas— y se restaura la próxima vez. No se sube nada a ningún sitio.',
   gotIt: 'Entendido',
 }

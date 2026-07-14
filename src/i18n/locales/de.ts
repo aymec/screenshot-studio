@@ -47,6 +47,7 @@ export const de: Dict = {
   exportAll: 'Alle exportieren',
   exporting: 'Wird exportiert…',
   reset: 'Auf Vorlage zurücksetzen',
+  storageFull: 'Dieser Browser hat keinen Speicherplatz mehr, deine Bilder werden nicht mehr gespeichert. Gib Speicher frei oder sichere dein Projekt in einer Datei.',
 
   aboutTitle: 'Über diese Website',
   closeInfo: 'Infos schließen',
@@ -74,6 +75,6 @@ export const de: Dict = {
     'Die Vorschau ist die echte Leinwand in voller Auflösung — das heruntergeladene PNG ist genau das, was du siehst. Exportiere den angezeigten Screenshot oder gleich die ganze Serie.',
 
   modalFootnote:
-    'Deine Einstellungen werden in diesem Browser gespeichert und beim nächsten Mal wiederhergestellt. Die Bilder nicht — zieh sie nach einem Neuladen erneut hinein.',
+    'Deine Arbeit wird in diesem Browser gespeichert — Bilder eingeschlossen — und beim nächsten Mal wiederhergestellt. Nichts wird irgendwohin hochgeladen.',
   gotIt: 'Alles klar',
 }

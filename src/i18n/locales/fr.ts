@@ -47,6 +47,7 @@ export const fr: Dict = {
   exportAll: 'Tout exporter',
   exporting: 'Exportation…',
   reset: 'Réinitialiser le modèle',
+  storageFull: 'Ce navigateur n’a plus d’espace de stockage : vos images ne sont plus enregistrées. Libérez de l’espace ou enregistrez votre projet dans un fichier.',
 
   aboutTitle: 'À propos de ce site',
   closeInfo: 'Fermer les informations',
@@ -74,6 +75,6 @@ export const fr: Dict = {
     'L’aperçu est le vrai canevas en pleine résolution : le PNG téléchargé est exactement ce que vous voyez. Exportez la capture affichée, ou toute la série d’un coup.',
 
   modalFootnote:
-    'Vos réglages sont enregistrés dans ce navigateur et restaurés à la prochaine visite. Les images, non — déposez-les à nouveau après un rechargement.',
+    'Votre travail est enregistré dans ce navigateur — images comprises — et restauré à la prochaine visite. Rien n’est envoyé nulle part.',
   gotIt: 'J’ai compris',
 }

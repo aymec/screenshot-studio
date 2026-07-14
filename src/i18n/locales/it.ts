@@ -47,6 +47,7 @@ export const it: Dict = {
   exportAll: 'Esporta tutti',
   exporting: 'Esportazione…',
   reset: 'Ripristina il modello',
+  storageFull: 'Questo browser ha esaurito lo spazio, quindi le tue immagini non vengono più salvate. Libera spazio oppure salva il progetto in un file.',
 
   aboutTitle: 'Informazioni su questo sito',
   closeInfo: 'Chiudi le informazioni',
@@ -73,6 +74,6 @@ export const it: Dict = {
     'L’anteprima è la tela reale a piena risoluzione: il PNG che scarichi è esattamente ciò che vedi. Esporta lo screenshot che stai guardando oppure l’intera serie in una volta.',
 
   modalFootnote:
-    'Le tue impostazioni vengono salvate in questo browser e ripristinate alla prossima visita. Le immagini no: trascinale di nuovo dopo un ricaricamento.',
+    'Il tuo lavoro viene salvato in questo browser — immagini comprese — e ripristinato alla prossima visita. Nulla viene caricato da nessuna parte.',
   gotIt: 'Ho capito',
 }
