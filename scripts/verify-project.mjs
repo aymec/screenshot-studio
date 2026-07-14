@@ -301,35 +301,91 @@ check('a file that is not a zip is reported, not swallowed', await page.$eval('[
 check('and the work in progress is untouched', (await canvasPng()) === intact)
 
 /* ---------------------------------------------------------------------------------------------
- * Reset all: back to a blank project, in the app *and* in storage.
+ * Delete all: back to a blank project, in the app *and* in storage — with a way out that keeps
+ * a copy of the work on the way through.
  * ------------------------------------------------------------------------------------------- */
 
 // The project loaded above is still open, across two devices, with images on it.
 await page.select('[data-device-select]', 'iphone-6.5')
 await page.waitForFunction(() => document.querySelector('canvas').width === 1242)
-check('there is a project to reset', (await imageCount()) > 0, `${await imageCount()} images stored`)
+check('there is a project to delete', (await imageCount()) > 0, `${await imageCount()} images stored`)
 
-await page.click('[data-reset-all]')
-await page.waitForFunction(() => getComputedStyle(document.querySelector('[data-confirm="reset-all"]')).opacity === '1')
-check('reset asks before it throws the project away', true)
+const openDeleteAll = async () => {
+  await page.click('[data-delete-all]')
+  await page.waitForFunction(
+    () => getComputedStyle(document.querySelector('[data-confirm="delete-all"]')).opacity === '1',
+  )
+}
 
-// Saying no leaves it exactly as it was — a confirmation that does not protect anything is a lie.
-const beforeReset = await canvasPng()
-await page.click('[data-confirm="reset-all"] [data-confirm-no]')
+await openDeleteAll()
+check('deleting everything asks first', true)
+
+// The three answers say what they do; "Yes" and "No" would not.
+const answers = await page.$$eval(
+  '[data-confirm="delete-all"] button',
+  (bs) => bs.map((b) => b.textContent.trim()),
+)
+check(
+  'it offers saving the project as the way out',
+  answers[0] === 'Save project and delete' &&
+    answers[1] === 'Delete without saving' &&
+    answers[2] === 'Cancel',
+  answers.join(' / '),
+)
+
+// Cancel leaves it exactly as it was — a confirmation that protects nothing is a lie.
+const beforeDelete = await canvasPng()
+await page.click('[data-confirm="delete-all"] [data-confirm-no]')
 await new Promise((r) => setTimeout(r, 300))
-check('answering no keeps the project', (await canvasPng()) === beforeReset)
+check('cancelling keeps the project', (await canvasPng()) === beforeDelete)
 check('and keeps its images in storage', (await imageCount()) > 0, `${await imageCount()} images`)
 
-await page.click('[data-reset-all]')
-await page.waitForFunction(() => getComputedStyle(document.querySelector('[data-confirm="reset-all"]')).opacity === '1')
-await page.click('[data-confirm="reset-all"] [data-confirm-yes]')
+// "Save project and delete" is one outcome, not two: it hands back the zip, *then* deletes.
+await page.evaluate(() => {
+  window.__saved = null
+  const create = URL.createObjectURL
+  URL.createObjectURL = (blob) => {
+    window.__saved = blob
+    return create.call(URL, blob)
+  }
+})
+await openDeleteAll()
+await page.click('[data-confirm="delete-all"] [data-confirm-save]')
+await page.waitForFunction(() => document.querySelectorAll('[data-strip-chip]').length === 1, {
+  timeout: 20000,
+})
+check('saving and deleting hands back the project file', await page.evaluate(() => window.__saved !== null))
+check('and then deletes everything', (await chips()).length === 1)
+const rescued = await page.evaluate(async () => {
+  const bytes = new Uint8Array(await window.__saved.arrayBuffer())
+  let binary = ''
+  for (const b of bytes) binary += String.fromCharCode(b)
+  return btoa(binary)
+})
+const rescuePath = '/tmp/studio-rescued.zip'
+writeFileSync(rescuePath, Buffer.from(rescued, 'base64'))
+check(
+  'the file it saved is the project, not an empty one',
+  execSync(`unzip -Z1 ${rescuePath}`).toString().includes('images/iphone-6.5/1.png'),
+)
+
+// Put it back from that file, so the plain delete below has something to destroy.
+await (await projectInput()).uploadFile(rescuePath)
+await page.waitForFunction(() => getComputedStyle(document.querySelector('[data-confirm="load-project"]')).opacity === '1')
+await page.click('[data-confirm="load-project"] [data-confirm-yes]')
+await page.waitForFunction(() => !document.querySelector('[data-busy]'), { timeout: 30000 })
+await new Promise((r) => setTimeout(r, 400))
+check('the rescued file opens back into the project it saved', (await canvasPng()) === beforeDelete)
+
+await openDeleteAll()
+await page.click('[data-confirm="delete-all"] [data-confirm-yes]')
 await page.waitForFunction(() => document.querySelectorAll('[data-strip-chip]').length === 1)
 
 check('the deck is back to a single screenshot', (await chips()).length === 1)
-check('the caption and colors are back to the template', (await canvasPng()) !== beforeReset)
+check('the caption and colors are back to the template', (await canvasPng()) !== beforeDelete)
 check('the screenshot is gone with it', !(await dropZone()).includes('sample-screenshot.png'), await dropZone())
 
-// The other device is reset too — this is a project-wide reset, not a per-device one.
+// The other device is cleared too — this deletes the project, not one device's deck.
 await page.select('[data-device-select]', 'ipad-13')
 await page.waitForFunction(() => document.querySelector('canvas').width === 2064)
 check('the other device is cleared as well', (await chips()).length === 1 && !(await dropZone()).includes('golden-panel.png'), await dropZone())
@@ -355,7 +411,7 @@ check('every image is dropped from storage', (await imageCount()) === 0, `${awai
 await page.reload({ waitUntil: 'networkidle0' })
 await page.waitForSelector('canvas')
 await new Promise((r) => setTimeout(r, 600))
-check('the reset survives a reload — nothing comes back', (await chips()).length === 1 && (await imageCount()) === 0)
+check('the deletion survives a reload — nothing comes back', (await chips()).length === 1 && (await imageCount()) === 0)
 
 check('no console errors', errors.length === 0, errors[0])
 

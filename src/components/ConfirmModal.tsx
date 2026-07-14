@@ -13,11 +13,42 @@ interface Props {
   body: string
   onConfirm: () => void
   onCancel: () => void
+  /**
+   * The way out that keeps the work: "Save project and delete". It is the whole outcome in one
+   * tap, not a detour — a dialog that tells you to go and save first, having already interrupted
+   * you, is a dead end you have to cancel out of.
+   *
+   * Given one, the buttons stack and this one leads: of the two that destroy something, it is the
+   * one that leaves the user a copy.
+   */
+  rescue?: { label: string; onSelect: () => void }
+  /** Overrides for the two default answers, where "yes" and "no" do not say enough. */
+  confirmLabel?: string
+  cancelLabel?: string
   t: (key: TKey, params?: Record<string, string | number>) => string
 }
 
+const destructive =
+  'w-full rounded-lg bg-red-600 px-4 py-2.5 font-semibold text-white transition hover:bg-red-500 active:bg-red-700'
+// blue-700: white on blue-600 is 3.76:1, under the 4.5:1 AA floor for text this size.
+const primary =
+  'w-full rounded-lg bg-blue-700 px-4 py-2.5 font-semibold text-white transition hover:bg-blue-600 active:bg-blue-800'
+const quiet =
+  'w-full rounded-lg border border-slate-300 px-4 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800'
+
 /** Yes/no gate in front of anything that throws work away. */
-export function ConfirmModal({ open, name, title, body, onConfirm, onCancel, t }: Props) {
+export function ConfirmModal({
+  open,
+  name,
+  title,
+  body,
+  onConfirm,
+  onCancel,
+  rescue,
+  confirmLabel,
+  cancelLabel,
+  t,
+}: Props) {
   return (
     <div
       role="dialog"
@@ -38,21 +69,20 @@ export function ConfirmModal({ open, name, title, body, onConfirm, onCancel, t }
         <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{title}</h2>
         <p className="mt-2 text-sm leading-relaxed text-slate-600 dark:text-slate-400">{body}</p>
 
-        <div className="mt-5 flex gap-2">
+        {/* Two answers sit side by side; three read as a list of outcomes, and the labels are too
+            long to share a line anyway. */}
+        <div className={`mt-5 flex gap-2 ${rescue ? 'flex-col' : ''}`}>
+          {rescue && (
+            <button data-confirm-save onClick={rescue.onSelect} className={primary}>
+              {rescue.label}
+            </button>
+          )}
           {/* The destructive answer is the one that carries the warning color. */}
-          <button
-            data-confirm-yes
-            onClick={onConfirm}
-            className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 font-semibold text-white transition hover:bg-red-500 active:bg-red-700"
-          >
-            {t('yes')}
+          <button data-confirm-yes onClick={onConfirm} className={destructive}>
+            {confirmLabel ?? t('yes')}
           </button>
-          <button
-            data-confirm-no
-            onClick={onCancel}
-            className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-          >
-            {t('no')}
+          <button data-confirm-no onClick={onCancel} className={quiet}>
+            {cancelLabel ?? t('no')}
           </button>
         </div>
       </div>

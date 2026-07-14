@@ -22,7 +22,9 @@ interface Props {
   /** Why the last project file would not open, if one would not. */
   loadError: LoadFailure | null
   /** Clears every device's screenshots, and the project in storage. Confirmed by the caller. */
-  onResetAll: () => void
+  onDeleteAll: () => void
+  /** The project file could not be written — so nothing was deleted, and the user must know. */
+  saveFailed: boolean
   /** The browser refused to store the project's images: the user's work is not being kept. */
   storageFull: boolean
   /** Everything in the panel edits screenshot `index` of the device's `count` screenshots. */
@@ -227,7 +229,8 @@ export function ControlsPanel({
   onSaveProject,
   onLoadProject,
   loadError,
-  onResetAll,
+  onDeleteAll,
+  saveFailed,
   storageFull,
   count,
   index,
@@ -480,6 +483,18 @@ export function ControlsPanel({
             {t('storageFull')}
           </p>
         )}
+        {/* The project file could not be written. Said out loud because the user may have asked
+            for it on the way to deleting everything — and *nothing* was deleted. */}
+        {saveFailed && (
+          <p
+            role="alert"
+            data-save-failed
+            className="rounded-lg bg-rose-100 px-3 py-2 text-xs font-medium text-rose-900 dark:bg-rose-950 dark:text-rose-200"
+          >
+            {t('saveFailed')}
+          </p>
+        )}
+
         {/* A file that would not open, said where the user asked for it. The work in progress is
             untouched, so this is a dead end and not a state to get out of. */}
         {loadError && (
@@ -552,11 +567,11 @@ export function ControlsPanel({
         {/* It destroys more than anything else in the panel, so it is the quietest thing in it —
             and it asks before it does anything. */}
         <button
-          data-reset-all
-          onClick={onResetAll}
+          data-delete-all
+          onClick={onDeleteAll}
           className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
-          {t('resetAll')}
+          {t('deleteAll')}
         </button>
       </div>
     </aside>

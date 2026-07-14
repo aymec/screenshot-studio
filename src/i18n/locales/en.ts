@@ -61,10 +61,13 @@ export const en = {
   loadErrorNotAProject: 'That zip is not a Screenshot Studio project.',
   loadErrorTooNew: 'That project was saved by a newer version of this app.',
 
-  resetAll: 'Reset all',
-  resetAllTitle: 'Reset everything?',
-  resetAllBody:
-    'All screenshots on all devices, and everything saved in this browser, will be deleted. Reset now?',
+  deleteAll: 'Delete all',
+  deleteAllTitle: 'Delete everything?',
+  deleteAllBody: 'All screenshots on all devices, and everything saved in this browser, will be deleted. This cannot be undone.',
+  deleteAllSave: 'Save project and delete',
+  deleteAllConfirm: 'Delete without saving',
+  cancel: 'Cancel',
+  saveFailed: 'The project could not be saved, so nothing was deleted.',
   storageFull: 'This browser is out of storage, so your images are no longer being saved. Free up space, or save your project to a file.',
 
   aboutTitle: 'About this site',

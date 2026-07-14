@@ -43,8 +43,9 @@ The **Export** menu offers three ways out:
   caption and color, plus the original image files. **Load project** opens one back. It is an
   ordinary zip, so you can look inside it, keep it in a repo, or hand it to someone else.
 
-**Reset all** starts over: every device back to one blank screenshot, and the copy in the browser
-deleted with it. It asks first, and it cannot be undone — save the project if you want to keep it.
+**Delete all** starts over: every device back to one blank screenshot, and the copy in the browser
+deleted with it. It asks first, and offers to **save the project and delete** — one tap that hands
+you the zip and then clears everything. If the save fails, nothing is deleted.
 
 ## The template
 

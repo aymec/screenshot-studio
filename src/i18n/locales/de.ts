@@ -56,10 +56,13 @@ export const de: Dict = {
   loadErrorUnreadable: 'Die Datei konnte nicht gelesen werden. Sie ist möglicherweise beschädigt oder kein Zip-Archiv.',
   loadErrorNotAProject: 'Dieses Zip ist kein Screenshot-Studio-Projekt.',
   loadErrorTooNew: 'Dieses Projekt wurde mit einer neueren Version dieser App gespeichert.',
-  resetAll: 'Alles zurücksetzen',
-  resetAllTitle: 'Alles zurücksetzen?',
-  resetAllBody:
-    'Alle Screenshots aller Geräte und alles in diesem Browser Gespeicherte werden gelöscht. Jetzt zurücksetzen?',
+  deleteAll: 'Alles löschen',
+  deleteAllTitle: 'Alles löschen?',
+  deleteAllBody: 'Alle Screenshots aller Geräte und alles in diesem Browser Gespeicherte werden gelöscht. Das lässt sich nicht rückgängig machen.',
+  deleteAllSave: 'Projekt sichern und löschen',
+  deleteAllConfirm: 'Ohne Sichern löschen',
+  cancel: 'Abbrechen',
+  saveFailed: 'Das Projekt konnte nicht gesichert werden, daher wurde nichts gelöscht.',
   storageFull: 'Dieser Browser hat keinen Speicherplatz mehr, deine Bilder werden nicht mehr gespeichert. Gib Speicher frei oder sichere dein Projekt in einer Datei.',
 
   aboutTitle: 'Über diese Website',

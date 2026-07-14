@@ -56,10 +56,13 @@ export const fr: Dict = {
   loadErrorUnreadable: 'Ce fichier n’a pas pu être lu. Il est peut-être endommagé, ou ce n’est pas une archive zip.',
   loadErrorNotAProject: 'Ce zip n’est pas un projet Screenshot Studio.',
   loadErrorTooNew: 'Ce projet a été enregistré par une version plus récente de l’application.',
-  resetAll: 'Tout réinitialiser',
-  resetAllTitle: 'Tout réinitialiser ?',
-  resetAllBody:
-    'Toutes les captures de tous les appareils, et tout ce qui est enregistré dans ce navigateur, seront supprimés. Tout réinitialiser ?',
+  deleteAll: 'Tout supprimer',
+  deleteAllTitle: 'Tout supprimer ?',
+  deleteAllBody: 'Toutes les captures de tous les appareils, et tout ce qui est enregistré dans ce navigateur, seront supprimés. Cette action est irréversible.',
+  deleteAllSave: 'Enregistrer le projet et supprimer',
+  deleteAllConfirm: 'Supprimer sans enregistrer',
+  cancel: 'Annuler',
+  saveFailed: 'Le projet n’a pas pu être enregistré : rien n’a été supprimé.',
   storageFull: 'Ce navigateur n’a plus d’espace de stockage : vos images ne sont plus enregistrées. Libérez de l’espace ou enregistrez votre projet dans un fichier.',
 
   aboutTitle: 'À propos de ce site',

@@ -122,7 +122,9 @@ export default function App() {
   const [panelOpen, setPanelOpen] = useState(false)
   const [infoOpen, setInfoOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [confirmReset, setConfirmReset] = useState(false)
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false)
+  // The project file could not be written, so nothing was deleted. The user has to hear that.
+  const [saveFailed, setSaveFailed] = useState(false)
   // What the app is busy doing, if anything. All three raise the same overlay: each one takes long
   // enough to look like a hang, and each one must block edits that would otherwise land in the
   // middle of it — a design change mid-export would be drawn into the zip.
@@ -144,7 +146,7 @@ export default function App() {
       setPanelOpen(false)
       setInfoOpen(false)
       setConfirmDelete(false)
-      setConfirmReset(false)
+      setConfirmDeleteAll(false)
       setPendingProject(null)
     }
     window.addEventListener('keydown', onKey)
@@ -397,21 +399,32 @@ export default function App() {
   // The project as a file: one zip holding a manifest and every image, across every device. The
   // database survives a reload; this survives the browser — it can be backed up, moved to another
   // machine, or handed to someone else.
+  //
+  // It throws rather than swallowing a failure, because one caller deletes the user's work as soon
+  // as this returns. A save that quietly did nothing would take the project with it.
+  const writeProjectFile = useCallback(() => {
+    const entries = toZip(decks, cursors, deviceId, PROJECT_NAME)
+    // The user's own date, not UTC's: saving late in the evening east of Greenwich would
+    // otherwise stamp the file with yesterday.
+    const now = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const day = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+    download(zip(entries), `screenshot-studio-project-${day}.zip`)
+  }, [decks, cursors, deviceId])
+
   const handleSaveProject = useCallback(async () => {
+    setSaveFailed(false)
     setBusy('save')
     await new Promise(requestAnimationFrame)
     try {
-      const entries = toZip(decks, cursors, deviceId, PROJECT_NAME)
-      // The user's own date, not UTC's: saving late in the evening east of Greenwich would
-      // otherwise stamp the file with yesterday.
-      const now = new Date()
-      const pad = (n: number) => String(n).padStart(2, '0')
-      const day = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
-      download(zip(entries), `screenshot-studio-project-${day}.zip`)
+      writeProjectFile()
+    } catch (e) {
+      console.error(e)
+      setSaveFailed(true)
     } finally {
       setBusy(null)
     }
-  }, [decks, cursors, deviceId])
+  }, [writeProjectFile])
 
   // Opening a project throws away everything currently on every device, so it is asked about
   // first. The file is held until the answer comes back.
@@ -446,15 +459,11 @@ export default function App() {
 
   // Start over: every device back to one blank screenshot, and the project dropped from storage.
   //
-  // This used to reset the selected screenshot's design and nothing else, which left the images,
-  // the other screenshots, and the other devices' decks in place — so a button called "Reset" did
-  // not get you back to where the app started. It now clears the lot, which is why it asks first.
-  //
   // The stored project is deleted outright rather than left for the autosave to overwrite: the
   // autosave writes what state holds, and the point here is that nothing should be left holding it.
   // The blank state it then writes carries no image keys, so the images go with it.
-  const handleResetAll = useCallback(() => {
-    setConfirmReset(false)
+  const deleteEverything = useCallback(() => {
+    setConfirmDeleteAll(false)
     setLoadError(null)
     setDecks(emptyDecks())
     setCursors({})
@@ -466,6 +475,30 @@ export default function App() {
     }
     deleteProject(CURRENT_SLOT).catch(console.error)
   }, [])
+
+  // The way out that keeps the work: write the file, *then* delete. One tap, one outcome — the
+  // alternative, saving and leaving the dialog up for a second decision, is a detour that leaves
+  // the user wondering whether the save happened.
+  //
+  // If the save fails, nothing is deleted. Deleting first, or deleting anyway, is how you lose
+  // somebody's project.
+  const handleSaveAndDeleteAll = useCallback(async () => {
+    setSaveFailed(false)
+    setBusy('save')
+    await new Promise(requestAnimationFrame)
+    try {
+      writeProjectFile()
+    } catch (e) {
+      console.error(e)
+      // Close the dialog on the way out, or the message explaining what went wrong is behind it.
+      setConfirmDeleteAll(false)
+      setSaveFailed(true)
+      return
+    } finally {
+      setBusy(null)
+    }
+    deleteEverything()
+  }, [writeProjectFile, deleteEverything])
 
   return (
     <div className="flex h-full bg-slate-100 font-sans text-slate-900 dark:bg-slate-950 dark:text-slate-100">
@@ -518,7 +551,8 @@ export default function App() {
         onSaveProject={handleSaveProject}
         onLoadProject={handleLoadProject}
         loadError={loadError}
-        onResetAll={() => setConfirmReset(true)}
+        onDeleteAll={() => setConfirmDeleteAll(true)}
+        saveFailed={saveFailed}
         storageFull={storageFull}
         count={deck.length}
         index={index}
@@ -569,15 +603,19 @@ export default function App() {
         t={t}
       />
 
-      {/* Reset throws away every screenshot on every device, and the copy in storage with them.
-          Nothing about a button in the panel's footer says that on its own. */}
+      {/* This throws away every screenshot on every device, and the copy in storage with them.
+          Nothing about a button in the panel's footer says that on its own — and the answers say
+          what they do, since the button labels are what people read and the paragraph is not. */}
       <ConfirmModal
-        open={confirmReset}
-        name="reset-all"
-        title={t('resetAllTitle')}
-        body={t('resetAllBody')}
-        onConfirm={handleResetAll}
-        onCancel={() => setConfirmReset(false)}
+        open={confirmDeleteAll}
+        name="delete-all"
+        title={t('deleteAllTitle')}
+        body={t('deleteAllBody')}
+        rescue={{ label: t('deleteAllSave'), onSelect: handleSaveAndDeleteAll }}
+        confirmLabel={t('deleteAllConfirm')}
+        cancelLabel={t('cancel')}
+        onConfirm={deleteEverything}
+        onCancel={() => setConfirmDeleteAll(false)}
         t={t}
       />
 

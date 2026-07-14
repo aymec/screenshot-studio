@@ -56,10 +56,13 @@ export const ko: Dict = {
   loadErrorUnreadable: '파일을 읽을 수 없습니다. 손상되었거나 zip 아카이브가 아닐 수 있습니다.',
   loadErrorNotAProject: '이 zip은 Screenshot Studio 프로젝트가 아닙니다.',
   loadErrorTooNew: '이 프로젝트는 더 새로운 버전의 앱에서 저장되었습니다.',
-  resetAll: '전체 초기화',
-  resetAllTitle: '전체를 초기화할까요?',
-  resetAllBody:
-    '모든 기기의 스크린샷과 이 브라우저에 저장된 내용이 모두 삭제됩니다. 초기화할까요?',
+  deleteAll: '전체 삭제',
+  deleteAllTitle: '전체를 삭제할까요?',
+  deleteAllBody: '모든 기기의 스크린샷과 이 브라우저에 저장된 내용이 모두 삭제됩니다. 되돌릴 수 없습니다.',
+  deleteAllSave: '프로젝트를 저장하고 삭제',
+  deleteAllConfirm: '저장하지 않고 삭제',
+  cancel: '취소',
+  saveFailed: '프로젝트를 저장하지 못해 아무것도 삭제하지 않았습니다.',
   storageFull: '이 브라우저의 저장 공간이 부족해 이미지가 더 이상 저장되지 않습니다. 공간을 확보하거나 프로젝트를 파일로 저장하세요.',
 
   aboutTitle: '이 사이트 소개',
