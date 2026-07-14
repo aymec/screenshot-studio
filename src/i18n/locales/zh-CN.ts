@@ -43,10 +43,27 @@ export const zhCN: Dict = {
   weight: '字重 — {{value}}',
   lineHeight: '行高 — {{value}}',
 
-  exportPng: '导出 PNG',
-  exportAll: '全部导出',
+  export: '导出',
+  exportThis: '导出这张截图',
+  exportAll: '导出所有截图',
+  saveProject: '保存项目（.zip）',
   exporting: '正在导出…',
-  reset: '恢复模板默认值',
+  savingProject: '正在保存项目…',
+  loadProject: '打开项目…',
+  loadingProject: '正在打开项目…',
+  loadProjectTitle: '打开这个项目？',
+  loadProjectBody: '所有设备上的截图都会被文件中的内容替换。你当前的作品没有保存在其他任何地方。',
+  loadErrorUnreadable: '无法读取该文件。它可能已损坏，或者不是 zip 压缩包。',
+  loadErrorNotAProject: '这个 zip 不是 Screenshot Studio 项目。',
+  loadErrorTooNew: '该项目由更新版本的应用保存。',
+  deleteAll: '全部删除',
+  deleteAllTitle: '要全部删除吗？',
+  deleteAllBody: '所有设备上的截图，以及保存在此浏览器中的全部内容，都将被删除。此操作无法撤销。',
+  deleteAllSave: '保存项目并删除',
+  deleteAllConfirm: '不保存直接删除',
+  cancel: '取消',
+  saveFailed: '项目保存失败，因此没有删除任何内容。',
+  storageFull: '此浏览器存储空间已满，图片不再保存。请释放空间，或将项目保存为文件。',
 
   aboutTitle: '关于本站',
   closeInfo: '关闭说明',
@@ -68,9 +85,9 @@ export const zhCN: Dict = {
     '用预览下方的 + 为每个设备添加最多 10 张截图，并用带编号的圆点在它们之间切换。每张截图都保留各自的图片、文案、颜色和字体。',
   step6Title: '导出。',
   step6Body:
-    '预览就是全分辨率的真实画布，所以下载的 PNG 与你看到的完全一致。可以只导出当前这张，也可以一次导出整套。',
+    '预览就是全分辨率的真实画布，所以下载的 PNG 与你看到的完全一致。可以导出当前这张截图、一次导出所有设备的所有截图，或者把整个项目保存为 .zip，以后再打开。',
 
   modalFootnote:
-    '设置会保存在此浏览器中，下次会自动恢复。图片不会保存 —— 重新加载后请再次拖入。',
+    '你的作品会保存在此浏览器中（包括图片），下次会自动恢复。不会上传到任何地方。',
   gotIt: '知道了',
 }

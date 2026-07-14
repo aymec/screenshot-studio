@@ -170,6 +170,26 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
 }
 
 /**
+ * Decode the bytes of an image file into something the canvas can draw.
+ *
+ * This is the one way back from stored bytes to a drawable image, and every source of them goes
+ * through it: the file the user picks, the one read back out of the browser's database, and the
+ * one unpacked from a saved project. Re-encoding a decoded image instead of keeping its bytes
+ * would hand back a different file than the user gave us.
+ *
+ * The object URL is revoked as soon as the image has decoded, which is the point at which the
+ * element holds the pixels itself and no longer needs the blob.
+ */
+export async function blobToImage(bytes: Uint8Array, type: string): Promise<HTMLImageElement> {
+  const url = URL.createObjectURL(new Blob([bytes as BlobPart], { type }))
+  try {
+    return await loadImage(url)
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
+/**
  * The PNG of whatever is currently on the canvas. Awaiting a blob rather than downloading one is
  * what lets a caller collect a whole deck by rendering each screenshot into this same canvas in
  * turn — still one canvas, still one render path.

@@ -1,18 +1,18 @@
-import type { TKey } from '../i18n'
-
 interface Props {
   open: boolean
-  t: (key: TKey, params?: Record<string, string | number>) => string
+  /** What the app is doing. Exporting, saving a project, and loading one all raise this. */
+  message: string
 }
 
 /**
- * Covers the app while "export all" walks the deck. The canvas visibly flips through every
- * screenshot as it renders them, which without this reads as the app doing something wrong.
+ * Covers the app while it works through something long: the export loop walking every screenshot,
+ * a project being packed into a zip, a project being unpacked out of one. The canvas visibly flips
+ * through the whole deck as it exports, which without this reads as the app doing something wrong.
  *
- * It is also what stops the user editing the design mid-loop: the render effect and the export
- * loop share one canvas, and a click landing between two frames would be drawn into the zip.
+ * It is also what stops the user editing mid-operation: the render effect and the export loop share
+ * one canvas, and a click landing between two frames would be drawn into the zip.
  */
-export function BusyOverlay({ open, t }: Props) {
+export function BusyOverlay({ open, message }: Props) {
   return (
     <div
       role="status"
@@ -30,7 +30,7 @@ export function BusyOverlay({ open, t }: Props) {
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" strokeWidth="3" />
             <path d="M22 12a10 10 0 0 0-10-10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
           </svg>
-          <p className="text-sm font-semibold text-white">{t('exporting')}</p>
+          <p className="text-sm font-semibold text-white">{message}</p>
         </>
       )}
     </div>

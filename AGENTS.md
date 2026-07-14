@@ -11,8 +11,11 @@ runtime — keep it that way.
 npm run dev        # http://localhost:5173 (the verify scripts need this running)
 npm run build      # tsc -b && vite build
 npm run lint       # oxlint
-npx tsc --noEmit   # typecheck
+npx tsc -b         # typecheck
 ```
+
+Typecheck with `tsc -b`, **not** `tsc --noEmit`. The root `tsconfig.json` is a solution file with
+`"files": []`, so `--noEmit` checks *nothing* and exits 0 however broken the code is.
 
 ## The one rule that matters
 
@@ -22,9 +25,9 @@ npx tsc --noEmit   # typecheck
 rendering path (DOM-to-image, an offscreen copy, a separate export canvas) — the whole design
 depends on there being exactly one.
 
-"Export all" obeys this too: it draws each screenshot into that same canvas in turn, awaits
-`toPng` between them, and lets the render effect put the selected one back. It is a loop over the
-one canvas, not a second renderer.
+"Export all" obeys this too. It walks **every device's** deck, so the canvas is resized to each
+preset in turn, draws each screenshot, and awaits `toPng` between them — then puts its own size and
+the selected screenshot back at the end. It is a loop over the one canvas, not a second renderer.
 
 It hands back a **single zip** (`src/zip.ts`), not one download per screenshot — a browser blocks
 or prompts on a burst of downloads, and ten loose PNGs are a mess to find. Entries are *stored*,
@@ -42,9 +45,10 @@ so restyling one never touches the others.
 - The decks are `Record<deviceId, Slide[]>` in `App.tsx`. Screenshots are keyed by device for the
   same reason a single one was: a phone capture center-cropped into a tablet's screen is not
   shippable. Switching device swaps the whole deck, and each deck remembers its own cursor.
-- Only the `Design`s are persisted (`{ [deviceId]: Design[] }`). An image is a live
-  `HTMLImageElement`, so a reload always comes back with empty screens. `loadDecks()` also lifts
-  the older single-design storage shape into every device's first slide rather than dropping it.
+- A `Slide` keeps the **bytes** of its capture, not just the decoded `HTMLImageElement`. An image
+  element can only be turned back into a file by re-encoding it through a canvas, which would save
+  a recompressed PNG of the user's file rather than the file itself. Everything that stores an
+  image stores those bytes; `blobToImage()` is the one way back.
 - An edit is applied to the `(deviceId, index)` **captured when the edit was made**, not read back
   from state when the work finishes. That is what keeps a slow image decode from landing on
   whichever screenshot the user has switched to since.
@@ -71,7 +75,7 @@ The strip's shape is part of the spec, and `scripts/verify-screenshots.mjs` pins
 - Delete is a 16px chip hanging 4px under the selected chip (from the chip itself, so it rides up
   with it), behind a yes/no `ConfirmModal` — it throws away an image, a caption, and colors. It is
   absent on a deck of one: a device must have a screenshot to render, and clearing one is what
-  Reset is for.
+  "Delete all" is for.
 - "Export all" raises `BusyOverlay` for the length of the loop. The canvas is the preview, so the
   user watches it flip through the whole deck as it renders; without the spinner that reads as the
   app malfunctioning. The overlay also blocks edits mid-loop, which would otherwise land in the zip.
@@ -80,6 +84,74 @@ Below `lg` the floating controls button sits *above* the strip (`bottom-24`), no
 overlap the bottom of the preview, which costs nothing, and that leaves the preview and the chips
 the full width. The panel's own bottom padding (`pb-40`) tracks that offset so its last control can
 still scroll clear of the button.
+
+## A project is kept in two places
+
+Every device's decks together are a **project**. It is stored twice, for two different lifetimes,
+and `src/project.ts` is the only place that converts between live state and a stored record — so
+both go through the same `sanitizeDesign` on the way back in.
+
+**The database (`src/db.ts`) — survives a reload.** localStorage cannot hold a project: it stores
+strings, ~5MB of them, and a phone capture is several MB of binary that would have to be base64'd.
+That is why images used to vanish on reload. IndexedDB holds them as bytes.
+
+- Three stores. `projects` holds the decks and a *key* per image; `images` holds the bytes; `slots`
+  holds each project's id/name/mtime. **Do not put the bytes back into the project record.** One
+  record means every keystroke of a caption rewrites every image, which forces a debounce, and a
+  debounce loses races — change a color, reload fast, and the unwritten record loads back over the
+  edit. Keyed apart, a design write is a few hundred bytes and happens on *every* edit.
+- An image is written once, under the key its `Shot` has carried since the file was picked, and
+  images nothing points at are collected on the next save. Do not reuse a key across projects.
+- The **selected device is not restored from the project.** It lives in localStorage, read
+  synchronously. Taking it from the project too gives it two sources of truth, and the stale one
+  wins: switch device, reload, and you get bounced back. A project the user *loads* does select its
+  device — that is a deliberate act, not a boot.
+- The first render waits on `hydrated` exactly as it waits on `fontsReady`. localStorage still
+  holds the designs, as the fallback for a browser that refuses a database and as the migration
+  path for anyone who used the app before it stored images.
+
+**The .zip (`toZip`/`fromZip`) — survives the browser.** One `project.json` manifest plus one entry
+per image, which the user can back up, move, or hand to someone else.
+
+- The manifest is the stored record plus `kind`, `version`, and the name/type of each image. A
+  slide's `image` is the *path of an entry in the archive*, not a database key — and on load those
+  paths are given **fresh keys**, or two projects would both claim `images/iphone-6.5/1.png` and the
+  second one's picture would be silently dropped in favor of the first one's bytes.
+- Image paths are indexed, never derived from the caption the way the PNG export names its files.
+  Captions collide, can be empty, and can be entirely CJK.
+- It carries the device **id**, never the preset's geometry. A stale file must not be able to bring
+  back a `screen.radius` and reintroduce the corner bleed `verify-frames.mjs` exists to catch.
+- Everything in the file is untrusted — it is a file on disk anyone can edit, possibly written by
+  another build. Kind and version are checked, designs are sanitized, and a missing image costs its
+  screenshot's picture, not the load.
+- `src/unzip.ts` reads what *other* tools write, not just what `zip.ts` writes: a project unzipped,
+  edited, and re-zipped in Finder comes back deflated, inside a folder, next to a `__MACOSX/`
+  sidecar. It reads the central directory (a one-pass writer leaves the local headers' sizes zeroed)
+  and checksums every entry.
+
+The three exports — this screenshot, every screenshot of every device, the whole project — sit
+behind one `ExportMenu`. It is a real menu (arrows, Enter, Escape, click-outside), and its items
+**disable rather than disappear**: rows that move between one opening and the next have to be read
+every time. Loading a project is deliberately *not* in it — it is not an export, and it replaces
+everything on every device, so it is its own button behind a `ConfirmModal`.
+
+"Delete all" clears every device's deck **and deletes the project from the database**, so it really
+does put the app back where it started. (It began life as "Reset", resetting the selected
+screenshot's design only, which left the images and every other screenshot in place.) It deletes the
+stored project outright rather than letting the autosave overwrite it — the autosave writes what
+state holds, and the point is that nothing should be left holding it.
+
+Its confirmation offers **Save project and delete** as the way out, and that is one outcome, not
+two: it writes the zip and *then* deletes. The alternative — saving and leaving the dialog up for a
+second decision — is a detour out of a dialog the user is already in. **If the save fails, nothing
+is deleted**, and the panel says so; deleting first, or deleting anyway, is how you lose somebody's
+project. The three buttons say what they do (`Save project and delete` / `Delete without saving` /
+`Cancel`) because the labels are what people read and the paragraph above them is not.
+
+Three `ConfirmModal`s are mounted at once and **fade rather than unmount**, so each takes a `name`
+(`data-confirm="delete-all"`). Without it, "the yes button" is whichever one is first in the DOM: a
+`page.click('[data-confirm-yes]')` hits the *closed* dialog's coordinates, and since the dialogs
+have different heights it lands on whatever is underneath. Always scope to the dialog.
 
 ## Dead space is not a control
 
@@ -149,11 +221,20 @@ There are no unit tests. Everything is checked by driving the real app in headle
 | `scripts/verify-theme.mjs` | light/dark, OS default, persistence |
 | `scripts/verify-i18n.mjs` | all 10 locales, browser detection, `<html lang>` |
 | `scripts/verify-cjk.mjs` | CJK segmentation, no injected spaces |
+| `scripts/verify-project.mjs` | a project survives a reload, and a save/wipe/load round trip |
+
+A script that seeds a design into localStorage **must clear the database in the same breath**
+(`scripts/storage.mjs`), immediately before the reload it is preparing. IndexedDB outranks
+localStorage, so otherwise the project autosaved by the previous page load hydrates over the design
+under test and the script quietly checks the wrong thing. It has to be right before the reload,
+because anything that changes state puts a project straight back.
 
 Run the relevant ones after a change, and keep Lighthouse at 100 on accessibility (`chrome-devtools`
-MCP, or the Lighthouse CLI). Two accessibility rules are easy to break: every visible-text control's
-accessible name must *contain* its visible text (WCAG 2.5.3), and muted text needs 4.5:1 against its
-background in **both** themes.
+MCP, or the Lighthouse CLI) — **with the export menu open as well as closed**, since a11y bugs hide
+in the states an audit of the resting page never reaches. Two accessibility rules are easy to break:
+every visible-text control's accessible name must *contain* its visible text (WCAG 2.5.3), and text
+needs 4.5:1 against its background in **both** themes (white on `bg-blue-600` is 3.76:1 and fails —
+the primary button is `bg-blue-700`).
 
 If a render change is intentional, re-record the golden with
 `node scripts/verify-render.mjs --update` and eyeball the new image before committing it.

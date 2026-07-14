@@ -5,6 +5,7 @@
 import { execSync } from 'node:child_process'
 import { writeFileSync } from 'node:fs'
 import puppeteer from 'puppeteer-core'
+import { resetStorage } from './storage.mjs'
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const SOURCE = 'tests/fixtures/sample-screenshot.png'
@@ -19,7 +20,7 @@ page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
 page.on('pageerror', (e) => errors.push(e.message))
 
 await page.goto('http://localhost:5173/', { waitUntil: 'networkidle0' })
-await page.evaluate(() => localStorage.clear())
+await resetStorage(page)
 await page.reload({ waitUntil: 'networkidle0' })
 await new Promise((r) => setTimeout(r, 400))
 
@@ -59,6 +60,23 @@ const centering = () =>
 
 const disabled = (sel) => page.$eval(sel, (b) => b.disabled)
 
+// The three exports live behind one menu now, so reaching any of them means opening it. Escape
+// closes it again without touching the panel behind it.
+const openExportMenu = async () => {
+  if (!(await has('[data-export-list]'))) await page.click('[data-export-menu]')
+  await page.waitForSelector('[data-export-list]')
+}
+const exportItemDisabled = async (id) => {
+  await openExportMenu()
+  const state = await disabled(`[data-export-item="${id}"]`)
+  await page.keyboard.press('Escape')
+  return state
+}
+const clickExportItem = async (id) => {
+  await openExportMenu()
+  await page.click(`[data-export-item="${id}"]`)
+}
+
 // 1. A fresh app has one screenshot: both arrows present but spent, one chip, one add chip.
 check('starts with a single chip', (await n('[data-strip-chip]')) === 1)
 check('prev chevron is always on screen', await has('[data-strip-prev]'))
@@ -66,7 +84,8 @@ check('next chevron is always on screen', await has('[data-strip-next]'))
 check('prev is disabled on the first screenshot', await disabled('[data-strip-prev]'))
 check('next is disabled on the last screenshot', await disabled('[data-strip-next]'))
 check('add chip is offered', await has('[data-strip-add]'))
-check('no "Export all" with one screenshot', !(await has('[data-export-all]')))
+check('the export menu is offered', await has('[data-export-menu]'))
+check('"Export all" is disabled while nothing has an image', await exportItemDisabled('all'))
 
 // 2. The selected chip carries the highlight color.
 const chipBg = () =>
@@ -83,8 +102,7 @@ check('add chip appends a screenshot', (await n('[data-strip-chip]')) === 2)
 check('the new screenshot is selected', (await chipBg())[1].cur === 'true')
 check('prev enables once past the first', !(await disabled('[data-strip-prev]')))
 check('next stays disabled on the last one', await disabled('[data-strip-next]'))
-check('"Export all" appears with 2 screenshots', await has('[data-export-all]'))
-check('"Export all" is disabled while no screenshot has an image', await disabled('[data-export-all]'))
+check('"Export all" is still disabled with 2 empty screenshots', await exportItemDisabled('all'))
 
 // 3b. Geometry: every chip is 36px and the arrows 44px; the selected chip aligns to the arrows'
 //     top edge, and the unselected ones to their centerline.
@@ -167,7 +185,8 @@ await page.select('[data-device-select]', 'iphone-6.5')
 await settle()
 check('switching back restores the iPhone deck', (await n('[data-strip-chip]')) === 10)
 
-// 9. Persistence: the designs of every screenshot survive a reload (the images do not).
+// 9. Persistence: every screenshot's design survives a reload, and so does its image — the
+//    project lives in IndexedDB, which holds the bytes, not just the designs.
 await page.reload({ waitUntil: 'networkidle0' })
 await new Promise((r) => setTimeout(r, 600))
 check('the whole deck persists across reload', (await n('[data-strip-chip]')) === 10)
@@ -176,8 +195,12 @@ await settle()
 check('each screenshot persists its own design', (await pixel(5, 5)) === '#7b2d8e', await pixel(5, 5))
 
 // 10. Export all: one zip, holding only the screenshots that actually have an image, each
-//     numbered by its place in the deck. A reload dropped the images, so put two back.
-check('"Export all" is disabled again once the images are gone', await disabled('[data-export-all]'))
+//     numbered by its place in the deck. Screenshot 1 came back from storage with its image, so
+//     the export is already live; screenshot 5 gets one too, to prove the numbering.
+check(
+  '"Export all" is still live after a reload, because the image came back',
+  !(await exportItemDisabled('all')),
+)
 const upload = async (i) => {
   await chip(i)
   await settle()
@@ -191,7 +214,7 @@ const upload = async (i) => {
 }
 await upload(0)
 await upload(4)
-check('"Export all" enables once a screenshot has an image', !(await disabled('[data-export-all]')))
+check('"Export all" enables once a screenshot has an image', !(await exportItemDisabled('all')))
 
 // Catch the blob the app hands to the browser instead of letting it hit the downloads folder.
 await page.evaluate(() => {
@@ -206,7 +229,7 @@ await page.evaluate(() => {
   }
 })
 check('nothing is spinning before the export starts', !(await has('[data-busy]')))
-await page.click('[data-export-all]')
+await clickExportItem('all')
 // The canvas visibly flips through the deck while it renders, so the spinner has to be up for it.
 const spun = await page
   .waitForSelector('[data-busy]', { timeout: 5000 })
@@ -226,7 +249,7 @@ const result = await page.evaluate(async () => {
   return { count: 1, names: window.__names, type: blobs[0].type, b64: btoa(binary) }
 })
 check('export all hands back exactly one file', result.count === 1, `${result.count} downloads`)
-check('that file is a zip', result.type === 'application/zip' && result.names[0] === 'iphone-6.5-screenshots.zip', `${result.type}, ${result.names?.[0]}`)
+check('that file is a zip', result.type === 'application/zip' && result.names[0] === 'screenshots.zip', `${result.type}, ${result.names?.[0]}`)
 
 const zipPath = '/tmp/strip-export.zip'
 writeFileSync(zipPath, Buffer.from(result.b64, 'base64'))
@@ -326,13 +349,13 @@ await (await del()).click()
 await settle()
 check('the delete chip opens a confirmation', await shownModal())
 
-await page.click('[data-confirm-no]')
+await page.click('[data-confirm="delete-screenshot"] [data-confirm-no]')
 await settle()
 check('answering no keeps the screenshot', !(await shownModal()) && (await n('[data-strip-chip]')) === 10)
 
 await (await del()).click()
 await settle()
-await page.click('[data-confirm-yes]')
+await page.click('[data-confirm="delete-screenshot"] [data-confirm-yes]')
 await settle()
 check('answering yes deletes the screenshot', (await n('[data-strip-chip]')) === 9)
 check('the confirmation closes on yes', !(await shownModal()))
@@ -352,7 +375,7 @@ check('the deletion survives a reload', await (async () => {
 while ((await n('[data-strip-chip]')) > 1) {
   await (await del()).click()
   await settle()
-  await page.click('[data-confirm-yes]')
+  await page.click('[data-confirm="delete-screenshot"] [data-confirm-yes]')
   await settle()
 }
 check('the last screenshot cannot be deleted', !(await del()), 'no delete chip on a deck of one')

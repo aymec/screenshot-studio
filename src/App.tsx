@@ -4,52 +4,61 @@ import { ConfirmModal } from './components/ConfirmModal'
 import { ControlsPanel } from './components/ControlsPanel'
 import { InfoModal } from './components/InfoModal'
 import { ScreenshotStrip } from './components/ScreenshotStrip'
-import { download, exportPng, loadImage, render, toPng } from './render'
+import { blobToImage, download, exportPng, loadImage, render, toPng } from './render'
 import { zip } from './zip'
 import {
-  DEFAULT_DESIGN,
-  DEFAULT_PRESET,
-  MAX_SCREENSHOTS,
-  PRESETS,
-  presetById,
-  type Design,
-} from './template'
+  CURRENT_SLOT,
+  deleteProject,
+  getImages,
+  getProject,
+  isQuotaError,
+  requestPersistence,
+  saveProject,
+} from './db'
+import {
+  blankDeck,
+  emptyDecks,
+  fromProject,
+  fromZip,
+  imageKeys,
+  ProjectLoadError,
+  sanitizeDesign,
+  toProject,
+  toZip,
+  type Decks,
+  type LoadFailure,
+  type Slide,
+} from './project'
+import { DEFAULT_PRESET, MAX_SCREENSHOTS, PRESETS, presetById, type Design } from './template'
 import { useTheme } from './theme'
 import { useI18n } from './i18n'
 
 const STORAGE_KEY = 'screenshot-studio:design'
 const DEVICE_KEY = 'screenshot-studio:device'
 
-/** One marketing screenshot: the panel's design, and the phone capture dropped into it. */
-interface Slide {
-  design: Design
-  /** The image and the file it came from. Never persisted — it lives only in this session. */
-  shot: { img: HTMLImageElement; name: string } | null
-}
-
-/** A device's screenshots, in the order they will be exported. Every device has its own. */
-type Decks = Record<string, Slide[]>
-
-const blankDeck = (): Slide[] => [{ design: DEFAULT_DESIGN, shot: null }]
+/** The project the app autosaves into as it is edited. */
+const PROJECT_NAME = 'Untitled project'
 
 /**
- * Restore each device's designs. Only the designs are stored — an image is a live
- * HTMLImageElement, so a reload always starts with empty screens.
+ * Restore each device's designs from localStorage.
+ *
+ * This is no longer where the user's work lives — IndexedDB is, images included, and it wins as
+ * soon as it has been read. But it is read *synchronously*, so it is what the app holds during
+ * the first paint, it is what a browser that refuses to open a database keeps forever, and it is
+ * what the first autosave migrates into the database on an existing user's next visit.
  *
  * Storage from before this app had more than one screenshot per device holds a single
  * shared Design; it is lifted into every device's first slide rather than dropped.
  */
 function loadDecks(): Decks {
-  const decks: Decks = Object.fromEntries(PRESETS.map((p) => [p.id, blankDeck()]))
+  const decks = emptyDecks()
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return decks
     const parsed: unknown = JSON.parse(raw)
 
     const slidesOf = (designs: Partial<Design>[]): Slide[] =>
-      designs
-        .slice(0, MAX_SCREENSHOTS)
-        .map((d) => ({ design: { ...DEFAULT_DESIGN, ...d }, shot: null }))
+      designs.slice(0, MAX_SCREENSHOTS).map((d) => ({ design: sanitizeDesign(d), shot: null }))
 
     // The one-design-per-app shape: a bare object with a caption in it.
     if (parsed && typeof parsed === 'object' && 'sentence' in parsed) {
@@ -105,10 +114,24 @@ export default function App() {
   const [cursors, setCursors] = useState<Record<string, number>>({})
   const [frame, setFrame] = useState<HTMLImageElement | null>(null)
   const [fontsReady, setFontsReady] = useState(false)
+  // The database is read asynchronously, so — exactly like the webfont — the first render waits
+  // for it. Painting before it lands would show the user the empty template for a frame and then
+  // snap to their actual work.
+  const [hydrated, setHydrated] = useState(false)
+  const [storageFull, setStorageFull] = useState(false)
   const [panelOpen, setPanelOpen] = useState(false)
   const [infoOpen, setInfoOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const [exporting, setExporting] = useState(false)
+  const [confirmDeleteAll, setConfirmDeleteAll] = useState(false)
+  // The project file could not be written, so nothing was deleted. The user has to hear that.
+  const [saveFailed, setSaveFailed] = useState(false)
+  // What the app is busy doing, if anything. All three raise the same overlay: each one takes long
+  // enough to look like a hang, and each one must block edits that would otherwise land in the
+  // middle of it — a design change mid-export would be drawn into the zip.
+  const [busy, setBusy] = useState<'export' | 'save' | 'load' | null>(null)
+  // The project file waiting on the user's answer to "this replaces everything — go ahead?".
+  const [pendingProject, setPendingProject] = useState<File | null>(null)
+  const [loadError, setLoadError] = useState<LoadFailure | null>(null)
   const { theme, toggleTheme } = useTheme()
   const { lang, setLang, t } = useI18n()
 
@@ -123,6 +146,8 @@ export default function App() {
       setPanelOpen(false)
       setInfoOpen(false)
       setConfirmDelete(false)
+      setConfirmDeleteAll(false)
+      setPendingProject(null)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -166,11 +191,63 @@ export default function App() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(designs))
   }, [decks])
 
+  // Read the work in progress — designs *and* images — back out of the database. Every image is
+  // decoded before any of it reaches state, so the decks land in one write: there is no window in
+  // which half a project is on screen.
+  //
+  // The selected device is deliberately *not* restored from here. It is already persisted, in
+  // localStorage, and read synchronously; taking it from the project as well would give it two
+  // sources of truth, and the stale one would win — switch device, reload before the autosave
+  // debounce has run, and the app would bounce you back to the device you just left. A project
+  // the user explicitly *loads* does select its device: that is a deliberate act, not a boot.
+  useEffect(() => {
+    let cancelled = false
+    getProject(CURRENT_SLOT)
+      .then(async (project) => {
+        if (!project || cancelled) return
+        const restored = await fromProject(project, await getImages(imageKeys(project)))
+        if (cancelled) return
+        setDecks(restored.decks)
+        setCursors(restored.cursors)
+      })
+      // No database (private mode, or a browser that refuses one): the designs loaded from
+      // localStorage stand, which is the behavior this app had before it stored images at all.
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setHydrated(true)
+      })
+    // A hint, not a guarantee, and nothing waits on the answer.
+    void requestPersistence()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // Autosave, on every edit and with no debounce: what gets written here is the designs, a few
+  // hundred bytes, because the images are keyed separately and each is written only once. A
+  // debounce would buy nothing and cost correctness — a reload can outrun it, and the record it
+  // had not yet written would load back over the edit the user just made.
+  //
+  // It cannot run before hydration, or the empty template the app starts with would be written
+  // straight over the project it is in the middle of reading.
+  useEffect(() => {
+    if (!hydrated) return
+    const { project, images } = toProject(CURRENT_SLOT, PROJECT_NAME, decks, cursors, deviceId)
+    saveProject(project, images)
+      .then(() => setStorageFull(false))
+      .catch((e) => {
+        // Out of quota is the one failure the user has to hear about: their images are not being
+        // kept, and only they can decide what to do about it.
+        if (isQuotaError(e)) setStorageFull(true)
+        else console.error(e)
+      })
+  }, [decks, cursors, deviceId, hydrated])
+
   useEffect(() => {
     const ctx = canvasRef.current?.getContext('2d')
-    if (!ctx || !fontsReady) return
+    if (!ctx || !fontsReady || !hydrated) return
     render(ctx, { preset, design, screenshot: slide.shot?.img ?? null, frame })
-  }, [preset, design, slide, frame, fontsReady])
+  }, [preset, design, slide, frame, fontsReady, hydrated])
 
   /** Replace the screenshot the edit was made on, leaving the rest of the deck alone. */
   const patchSlide = useCallback(
@@ -241,12 +318,17 @@ export default function App() {
     (file: File) => {
       const device = deviceId
       const at = index
-      const reader = new FileReader()
-      reader.onload = async () => {
-        const img = await loadImage(reader.result as string)
-        patchSlide(device, at, (s) => ({ ...s, shot: { img, name: file.name } }))
+      const load = async () => {
+        const bytes = new Uint8Array(await file.arrayBuffer())
+        const img = await blobToImage(bytes, file.type)
+        // The key is minted here, once, and travels with the image for as long as it is on this
+        // screenshot. The bytes under it never change, so a save can skip rewriting them.
+        patchSlide(device, at, (s) => ({
+          ...s,
+          shot: { key: crypto.randomUUID(), img, name: file.name, bytes, type: file.type },
+        }))
       }
-      reader.readAsDataURL(file)
+      load().catch(console.error)
     },
     [patchSlide, deviceId, index],
   )
@@ -257,48 +339,166 @@ export default function App() {
     }
   }, [design, preset.id, index])
 
-  // Draw each screenshot into the one real canvas in turn, collect the PNGs, and hand back a
-  // single zip — ten separate downloads is a browser permission prompt and a mess of a folder.
-  // A screenshot with no image in it is an empty frame nobody would upload, so it is skipped,
-  // but the numbering follows the deck: it is what the user sees on the chips.
-  // The canvas is left on the wrong screenshot for the length of the loop, which the render
-  // effect puts back — export and preview stay the same pixels either way.
+  // Draw every screenshot of every device into the one real canvas in turn, collect the PNGs, and
+  // hand back a single zip — a store listing is uploaded per device, and a burst of separate
+  // downloads is a browser permission prompt and a mess of a folder.
+  //
+  // It walks the devices, not just the selected one, so the whole listing comes out in one click.
+  // That means the canvas has to *become* each device in turn: its size is the export size, so it
+  // is resized per preset and put back at the end, along with the screenshot that was on it. It is
+  // still one canvas and one render path — preview and export remain the same pixels.
+  //
+  // A screenshot with no image is an empty frame nobody would upload, so it is skipped, but the
+  // numbering follows the deck: it is what the user sees on the chips.
   const handleExportAll = useCallback(async () => {
     const canvas = canvasRef.current
     const ctx = canvas?.getContext('2d')
     if (!canvas || !ctx) return
 
-    setExporting(true)
+    setBusy('export')
     // Let the overlay paint before the loop starts drawing over the canvas, or the user watches
-    // the preview flip through the deck with nothing to explain why.
+    // the preview flip through every device with nothing to explain why.
     await new Promise(requestAnimationFrame)
 
     try {
       const entries = []
-      for (const [i, s] of deck.entries()) {
-        if (!s.shot) continue
-        render(ctx, { preset, design: s.design, screenshot: s.shot.img, frame })
-        const png = await toPng(canvas)
-        if (png) {
-          entries.push({
-            name: filename(s.design, preset.id, i + 1),
-            data: new Uint8Array(await png.arrayBuffer()),
-          })
+      for (const p of PRESETS) {
+        const slides = decks[p.id] ?? []
+        if (!slides.some((s) => s.shot)) continue
+
+        // Each device's frame is drawn against its own geometry; the browser has them cached.
+        const deviceFrame = await loadImage(p.frame.src)
+        canvas.width = p.canvas.w
+        canvas.height = p.canvas.h
+
+        for (const [i, s] of slides.entries()) {
+          if (!s.shot) continue
+          render(ctx, { preset: p, design: s.design, screenshot: s.shot.img, frame: deviceFrame })
+          const png = await toPng(canvas)
+          if (png) {
+            entries.push({
+              name: filename(s.design, p.id, i + 1),
+              data: new Uint8Array(await png.arrayBuffer()),
+            })
+          }
         }
       }
+
+      // Put the canvas back where the user left it: it is the preview they are looking at.
+      canvas.width = preset.canvas.w
+      canvas.height = preset.canvas.h
       render(ctx, { preset, design, screenshot: slide.shot?.img ?? null, frame })
 
-      if (entries.length) download(zip(entries), `${preset.id}-screenshots.zip`)
+      if (entries.length) download(zip(entries), 'screenshots.zip')
     } finally {
       // Even if a screenshot fails to encode, the app must not be left behind the overlay.
-      setExporting(false)
+      setBusy(null)
     }
-  }, [deck, preset, frame, design, slide])
+  }, [decks, preset, frame, design, slide])
 
-  const handleReset = useCallback(
-    () => patchSlide(deviceId, index, (s) => ({ ...s, design: DEFAULT_DESIGN })),
-    [patchSlide, deviceId, index],
-  )
+  // The project as a file: one zip holding a manifest and every image, across every device. The
+  // database survives a reload; this survives the browser — it can be backed up, moved to another
+  // machine, or handed to someone else.
+  //
+  // It throws rather than swallowing a failure, because one caller deletes the user's work as soon
+  // as this returns. A save that quietly did nothing would take the project with it.
+  const writeProjectFile = useCallback(() => {
+    const entries = toZip(decks, cursors, deviceId, PROJECT_NAME)
+    // The user's own date, not UTC's: saving late in the evening east of Greenwich would
+    // otherwise stamp the file with yesterday.
+    const now = new Date()
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const day = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
+    download(zip(entries), `screenshot-studio-project-${day}.zip`)
+  }, [decks, cursors, deviceId])
+
+  const handleSaveProject = useCallback(async () => {
+    setSaveFailed(false)
+    setBusy('save')
+    await new Promise(requestAnimationFrame)
+    try {
+      writeProjectFile()
+    } catch (e) {
+      console.error(e)
+      setSaveFailed(true)
+    } finally {
+      setBusy(null)
+    }
+  }, [writeProjectFile])
+
+  // Opening a project throws away everything currently on every device, so it is asked about
+  // first. The file is held until the answer comes back.
+  const handleLoadProject = useCallback((file: File) => {
+    setLoadError(null)
+    setPendingProject(file)
+  }, [])
+
+  const confirmLoadProject = useCallback(async () => {
+    const file = pendingProject
+    setPendingProject(null)
+    if (!file) return
+
+    setBusy('load')
+    await new Promise(requestAnimationFrame)
+    try {
+      const restored = await fromZip(file)
+      // Every image in the archive is decoded before any of this lands, so the whole project
+      // appears at once rather than filling in screenshot by screenshot.
+      setDecks(restored.decks)
+      setCursors(restored.cursors)
+      // Unlike a reload, this *is* a deliberate act: the project says which device it was being
+      // worked on, and that is where the user expects to be put down.
+      setDeviceId(restored.deviceId)
+    } catch (e) {
+      // A file that cannot be opened leaves the work in progress exactly as it was.
+      setLoadError(e instanceof ProjectLoadError ? e.reason : 'unreadable')
+    } finally {
+      setBusy(null)
+    }
+  }, [pendingProject])
+
+  // Start over: every device back to one blank screenshot, and the project dropped from storage.
+  //
+  // The stored project is deleted outright rather than left for the autosave to overwrite: the
+  // autosave writes what state holds, and the point here is that nothing should be left holding it.
+  // The blank state it then writes carries no image keys, so the images go with it.
+  const deleteEverything = useCallback(() => {
+    setConfirmDeleteAll(false)
+    setLoadError(null)
+    setDecks(emptyDecks())
+    setCursors({})
+    setDeviceId(DEFAULT_PRESET.id)
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch {
+      // Private mode: there was nothing there to remove.
+    }
+    deleteProject(CURRENT_SLOT).catch(console.error)
+  }, [])
+
+  // The way out that keeps the work: write the file, *then* delete. One tap, one outcome — the
+  // alternative, saving and leaving the dialog up for a second decision, is a detour that leaves
+  // the user wondering whether the save happened.
+  //
+  // If the save fails, nothing is deleted. Deleting first, or deleting anyway, is how you lose
+  // somebody's project.
+  const handleSaveAndDeleteAll = useCallback(async () => {
+    setSaveFailed(false)
+    setBusy('save')
+    await new Promise(requestAnimationFrame)
+    try {
+      writeProjectFile()
+    } catch (e) {
+      console.error(e)
+      // Close the dialog on the way out, or the message explaining what went wrong is behind it.
+      setConfirmDeleteAll(false)
+      setSaveFailed(true)
+      return
+    } finally {
+      setBusy(null)
+    }
+    deleteEverything()
+  }, [writeProjectFile, deleteEverything])
 
   return (
     <div className="flex h-full bg-slate-100 font-sans text-slate-900 dark:bg-slate-950 dark:text-slate-100">
@@ -345,10 +545,15 @@ export default function App() {
         onImage={handleImage}
         onExport={handleExport}
         onExportAll={handleExportAll}
-        // An empty frame is not a screenshot anyone uploads, so a deck with no images at all has
-        // nothing to zip — the button says so rather than downloading an empty file.
-        canExportAll={deck.some((s) => s.shot)}
-        onReset={handleReset}
+        // An empty frame is not a screenshot anyone uploads, so a project with no images at all
+        // has nothing to zip — the menu item says so rather than downloading an empty file.
+        canExportAll={Object.values(decks).some((slides) => slides.some((s) => s.shot))}
+        onSaveProject={handleSaveProject}
+        onLoadProject={handleLoadProject}
+        loadError={loadError}
+        onDeleteAll={() => setConfirmDeleteAll(true)}
+        saveFailed={saveFailed}
+        storageFull={storageFull}
         count={deck.length}
         index={index}
         hasImage={!!slide.shot}
@@ -370,6 +575,7 @@ export default function App() {
           It floats clear above the strip rather than beside it: overlapping the bottom corner of
           the preview costs nothing, while sharing the strip's line would squeeze the chips. */}
       <button
+        data-panel-toggle
         onClick={() => setPanelOpen((o) => !o)}
         aria-label={panelOpen ? t('closeControls') : t('showControls')}
         aria-expanded={panelOpen}
@@ -380,16 +586,48 @@ export default function App() {
         </svg>
       </button>
 
-      <BusyOverlay open={exporting} t={t} />
+      <BusyOverlay
+        open={busy !== null}
+        message={busy === 'save' ? t('savingProject') : busy === 'load' ? t('loadingProject') : t('exporting')}
+      />
 
       <InfoModal open={infoOpen} onClose={() => setInfoOpen(false)} t={t} />
 
       <ConfirmModal
         open={confirmDelete}
+        name="delete-screenshot"
         title={t('deleteScreenshot', { n: index + 1 })}
         body={t('deleteScreenshotBody')}
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}
+        t={t}
+      />
+
+      {/* This throws away every screenshot on every device, and the copy in storage with them.
+          Nothing about a button in the panel's footer says that on its own — and the answers say
+          what they do, since the button labels are what people read and the paragraph is not. */}
+      <ConfirmModal
+        open={confirmDeleteAll}
+        name="delete-all"
+        title={t('deleteAllTitle')}
+        body={t('deleteAllBody')}
+        rescue={{ label: t('deleteAllSave'), onSelect: handleSaveAndDeleteAll }}
+        confirmLabel={t('deleteAllConfirm')}
+        cancelLabel={t('cancel')}
+        onConfirm={deleteEverything}
+        onCancel={() => setConfirmDeleteAll(false)}
+        t={t}
+      />
+
+      {/* Opening a project replaces every screenshot on every device, which is not something to
+          discover afterwards. */}
+      <ConfirmModal
+        open={pendingProject !== null}
+        name="load-project"
+        title={t('loadProjectTitle')}
+        body={t('loadProjectBody')}
+        onConfirm={confirmLoadProject}
+        onCancel={() => setPendingProject(null)}
         t={t}
       />
     </div>

@@ -3,7 +3,9 @@ import { readableOn } from '../color'
 import { FONTS, PRESETS, type Design, type DevicePreset } from '../template'
 import { tokenize } from '../text'
 import type { Theme } from '../theme'
+import type { LoadFailure } from '../project'
 import { LANGUAGES, type Lang, type TKey } from '../i18n'
+import { ExportMenu } from './ExportMenu'
 
 interface Props {
   design: Design
@@ -13,9 +15,18 @@ interface Props {
   onImage: (file: File) => void
   onExport: () => void
   onExportAll: () => void
-  /** False when not one screenshot in the deck has an image: there is nothing to put in the zip. */
+  /** False when not one screenshot on any device has an image: nothing to put in the zip. */
   canExportAll: boolean
-  onReset: () => void
+  onSaveProject: () => void
+  onLoadProject: (file: File) => void
+  /** Why the last project file would not open, if one would not. */
+  loadError: LoadFailure | null
+  /** Clears every device's screenshots, and the project in storage. Confirmed by the caller. */
+  onDeleteAll: () => void
+  /** The project file could not be written — so nothing was deleted, and the user must know. */
+  saveFailed: boolean
+  /** The browser refused to store the project's images: the user's work is not being kept. */
+  storageFull: boolean
   /** Everything in the panel edits screenshot `index` of the device's `count` screenshots. */
   count: number
   index: number
@@ -215,7 +226,12 @@ export function ControlsPanel({
   onExport,
   onExportAll,
   canExportAll,
-  onReset,
+  onSaveProject,
+  onLoadProject,
+  loadError,
+  onDeleteAll,
+  saveFailed,
+  storageFull,
   count,
   index,
   hasImage,
@@ -230,6 +246,7 @@ export function ControlsPanel({
   onToggleWord,
 }: Props) {
   const fileRef = useRef<HTMLInputElement>(null)
+  const projectInput = useRef<HTMLInputElement>(null)
   const wordList = tokenize(design.sentence).map((tok) => tok.text)
   const size = `${preset.canvas.w} × ${preset.canvas.h}`
 
@@ -455,29 +472,106 @@ export function ControlsPanel({
       </Field>
 
       <div className="mt-auto flex flex-col gap-2 pt-2">
-        <button
-          onClick={onExport}
-          className="w-full rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white transition hover:bg-blue-500 active:bg-blue-700"
-        >
-          {t('exportPng')}
-        </button>
-        {/* Only worth its own button once there is more than one screenshot to export. It hands
-            back one zip, so it stays a single click no matter how big the deck is. */}
-        {count > 1 && (
-          <button
-            data-export-all
-            onClick={onExportAll}
-            disabled={!canExportAll}
-            className="w-full rounded-lg border border-blue-600 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-transparent disabled:text-slate-500 dark:border-blue-500 dark:text-blue-300 dark:hover:bg-blue-950 dark:disabled:border-slate-700 dark:disabled:text-slate-400"
+        {/* Silence here would be a lie: the user would go on editing a project the browser is no
+            longer keeping, and only find out on the reload that loses it. */}
+        {storageFull && (
+          <p
+            role="status"
+            data-storage-full
+            className="rounded-lg bg-amber-100 px-3 py-2 text-xs font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200"
           >
-            {t('exportAll')}
-          </button>
+            {t('storageFull')}
+          </p>
         )}
+        {/* The project file could not be written. Said out loud because the user may have asked
+            for it on the way to deleting everything — and *nothing* was deleted. */}
+        {saveFailed && (
+          <p
+            role="alert"
+            data-save-failed
+            className="rounded-lg bg-rose-100 px-3 py-2 text-xs font-medium text-rose-900 dark:bg-rose-950 dark:text-rose-200"
+          >
+            {t('saveFailed')}
+          </p>
+        )}
+
+        {/* A file that would not open, said where the user asked for it. The work in progress is
+            untouched, so this is a dead end and not a state to get out of. */}
+        {loadError && (
+          <p
+            role="alert"
+            data-load-error
+            className="rounded-lg bg-rose-100 px-3 py-2 text-xs font-medium text-rose-900 dark:bg-rose-950 dark:text-rose-200"
+          >
+            {t(
+              loadError === 'too-new'
+                ? 'loadErrorTooNew'
+                : loadError === 'not-a-project'
+                  ? 'loadErrorNotAProject'
+                  : 'loadErrorUnreadable',
+            )}
+          </p>
+        )}
+
+        <ExportMenu
+          label={t('export')}
+          items={[
+            {
+              id: 'one',
+              label: t('exportThis'),
+              onSelect: onExport,
+              // An empty frame is not a screenshot anyone uploads.
+              disabled: !hasImage,
+            },
+            {
+              id: 'all',
+              label: t('exportAll'),
+              onSelect: onExportAll,
+              disabled: !canExportAll,
+            },
+            {
+              id: 'project',
+              // Always available: a project with no images in it yet is still captions, colors,
+              // and type the user does not want to lose.
+              label: t('saveProject'),
+              onSelect: onSaveProject,
+            },
+          ]}
+        />
+
+        {/* Load is not in the export menu. It is not an export, and it replaces everything on
+            every device — an action like that does not belong behind a caret next to three that
+            only ever hand you a file. */}
         <button
-          onClick={onReset}
+          data-load-project
+          onClick={() => projectInput.current?.click()}
+          className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+        >
+          {t('loadProject')}
+        </button>
+        <input
+          ref={projectInput}
+          type="file"
+          accept=".zip,application/zip"
+          className="hidden"
+          aria-hidden="true"
+          tabIndex={-1}
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) onLoadProject(file)
+            // Clear it, or picking the same project twice fires no change event at all.
+            e.target.value = ''
+          }}
+        />
+
+        {/* It destroys more than anything else in the panel, so it is the quietest thing in it —
+            and it asks before it does anything. */}
+        <button
+          data-delete-all
+          onClick={onDeleteAll}
           className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
-          {t('reset')}
+          {t('deleteAll')}
         </button>
       </div>
     </aside>

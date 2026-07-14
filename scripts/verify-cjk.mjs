@@ -8,6 +8,7 @@
  *        node scripts/verify-cjk.mjs
  */
 import puppeteer from 'puppeteer-core'
+import { resetStorage } from './storage.mjs'
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 
@@ -21,7 +22,7 @@ const browser = await puppeteer.launch({ executablePath: CHROME, headless: true 
 const page = await browser.newPage()
 await page.setViewport({ width: 1440, height: 900 })
 await page.goto('http://localhost:5173/', { waitUntil: 'networkidle0' })
-await page.evaluate(() => localStorage.clear())
+await resetStorage(page)
 await page.reload({ waitUntil: 'networkidle0' })
 
 const setCaption = async (text) => {

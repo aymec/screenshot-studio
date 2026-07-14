@@ -15,6 +15,7 @@
  *        node scripts/verify-render.mjs --update   # re-record the golden
  */
 import puppeteer from 'puppeteer-core'
+import { clearProjects } from './storage.mjs'
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
@@ -45,6 +46,7 @@ await page.evaluate((d) => {
   localStorage.clear()
   localStorage.setItem('screenshot-studio:design', JSON.stringify(d))
 }, DESIGN)
+await clearProjects(page)
 await page.reload({ waitUntil: 'networkidle0' })
 
 const input = await page.$('input[type=file]')

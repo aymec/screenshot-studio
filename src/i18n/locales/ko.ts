@@ -43,10 +43,27 @@ export const ko: Dict = {
   weight: '굵기 — {{value}}',
   lineHeight: '줄 간격 — {{value}}',
 
-  exportPng: 'PNG 내보내기',
-  exportAll: '전체 내보내기',
+  export: '내보내기',
+  exportThis: '이 스크린샷 내보내기',
+  exportAll: '모든 스크린샷 내보내기',
+  saveProject: '프로젝트 저장(.zip)',
   exporting: '내보내는 중…',
-  reset: '템플릿 기본값으로 되돌리기',
+  savingProject: '프로젝트를 저장하는 중…',
+  loadProject: '프로젝트 열기…',
+  loadingProject: '프로젝트를 여는 중…',
+  loadProjectTitle: '이 프로젝트를 열까요?',
+  loadProjectBody: '모든 기기의 스크린샷이 파일에 담긴 것으로 바뀝니다. 지금 작업은 다른 곳에 저장되어 있지 않습니다.',
+  loadErrorUnreadable: '파일을 읽을 수 없습니다. 손상되었거나 zip 아카이브가 아닐 수 있습니다.',
+  loadErrorNotAProject: '이 zip은 Screenshot Studio 프로젝트가 아닙니다.',
+  loadErrorTooNew: '이 프로젝트는 더 새로운 버전의 앱에서 저장되었습니다.',
+  deleteAll: '전체 삭제',
+  deleteAllTitle: '전체를 삭제할까요?',
+  deleteAllBody: '모든 기기의 스크린샷과 이 브라우저에 저장된 내용이 모두 삭제됩니다. 되돌릴 수 없습니다.',
+  deleteAllSave: '프로젝트를 저장하고 삭제',
+  deleteAllConfirm: '저장하지 않고 삭제',
+  cancel: '취소',
+  saveFailed: '프로젝트를 저장하지 못해 아무것도 삭제하지 않았습니다.',
+  storageFull: '이 브라우저의 저장 공간이 부족해 이미지가 더 이상 저장되지 않습니다. 공간을 확보하거나 프로젝트를 파일로 저장하세요.',
 
   aboutTitle: '이 사이트 소개',
   closeInfo: '설명 닫기',
@@ -68,9 +85,9 @@ export const ko: Dict = {
     '미리보기 아래의 + 로 기기마다 최대 10장까지 추가하고, 번호가 매겨진 칩으로 전환하세요. 이미지, 문구, 색상, 글꼴은 스크린샷마다 따로 저장됩니다.',
   step6Title: '내보내기',
   step6Body:
-    '미리보기는 전체 해상도의 실제 캔버스이므로 내려받는 PNG는 보이는 그대로입니다. 보고 있는 한 장만, 또는 세트 전체를 한 번에 내보낼 수 있습니다.',
+    '미리보기가 곧 원본 해상도의 실제 캔버스이므로, 내려받는 PNG는 보이는 그대로입니다. 지금 보고 있는 스크린샷, 모든 기기의 모든 스크린샷, 또는 프로젝트 전체를 나중에 다시 열 수 있는 .zip으로 저장하세요.',
 
   modalFootnote:
-    '설정은 이 브라우저에 저장되어 다음에도 복원됩니다. 이미지는 저장되지 않으니 새로고침 후 다시 넣어 주세요.',
+    '작업 내용은 이미지까지 이 브라우저에 저장되어 다음에도 복원됩니다. 어디에도 업로드되지 않습니다.',
   gotIt: '확인',
 }

@@ -43,10 +43,27 @@ export const it: Dict = {
   weight: 'Spessore — {{value}}',
   lineHeight: 'Interlinea — {{value}}',
 
-  exportPng: 'Esporta PNG',
-  exportAll: 'Esporta tutti',
+  export: 'Esporta',
+  exportThis: 'Esporta questa schermata',
+  exportAll: 'Esporta tutte le schermate',
+  saveProject: 'Salva progetto (.zip)',
   exporting: 'Esportazione…',
-  reset: 'Ripristina il modello',
+  savingProject: 'Salvataggio del progetto…',
+  loadProject: 'Apri progetto…',
+  loadingProject: 'Apertura del progetto…',
+  loadProjectTitle: 'Aprire questo progetto?',
+  loadProjectBody: 'Sostituisce tutte le schermate di ogni dispositivo con quelle del file. Il lavoro attuale non è salvato da nessun’altra parte.',
+  loadErrorUnreadable: 'Impossibile leggere il file. Potrebbe essere danneggiato o non essere un archivio zip.',
+  loadErrorNotAProject: 'Questo zip non è un progetto di Screenshot Studio.',
+  loadErrorTooNew: 'Questo progetto è stato salvato da una versione più recente dell’app.',
+  deleteAll: 'Elimina tutto',
+  deleteAllTitle: 'Eliminare tutto?',
+  deleteAllBody: 'Verranno eliminate tutte le schermate di tutti i dispositivi e tutto ciò che è salvato in questo browser. L’operazione non è annullabile.',
+  deleteAllSave: 'Salva il progetto ed elimina',
+  deleteAllConfirm: 'Elimina senza salvare',
+  cancel: 'Annulla',
+  saveFailed: 'Non è stato possibile salvare il progetto, quindi non è stato eliminato nulla.',
+  storageFull: 'Questo browser ha esaurito lo spazio, quindi le tue immagini non vengono più salvate. Libera spazio oppure salva il progetto in un file.',
 
   aboutTitle: 'Informazioni su questo sito',
   closeInfo: 'Chiudi le informazioni',
@@ -70,9 +87,9 @@ export const it: Dict = {
     'Aggiungi fino a 10 screenshot per dispositivo con il + sotto l’anteprima e passa dall’uno all’altro con i cerchi numerati. Ognuno mantiene la propria immagine, didascalia, colori e tipografia.',
   step6Title: 'Esporta.',
   step6Body:
-    'L’anteprima è la tela reale a piena risoluzione: il PNG che scarichi è esattamente ciò che vedi. Esporta lo screenshot che stai guardando oppure l’intera serie in una volta.',
+    'L’anteprima è la tela vera a piena risoluzione: il PNG che scarichi è esattamente ciò che vedi. Esporta la schermata su cui sei, tutte le schermate di tutti i dispositivi in una volta, oppure salva l’intero progetto in uno .zip da riaprire più tardi.',
 
   modalFootnote:
-    'Le tue impostazioni vengono salvate in questo browser e ripristinate alla prossima visita. Le immagini no: trascinale di nuovo dopo un ricaricamento.',
+    'Il tuo lavoro viene salvato in questo browser — immagini comprese — e ripristinato alla prossima visita. Nulla viene caricato da nessuna parte.',
   gotIt: 'Ho capito',
 }

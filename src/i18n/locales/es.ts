@@ -43,10 +43,27 @@ export const es: Dict = {
   weight: 'Grosor — {{value}}',
   lineHeight: 'Interlineado — {{value}}',
 
-  exportPng: 'Exportar PNG',
-  exportAll: 'Exportar todo',
+  export: 'Exportar',
+  exportThis: 'Exportar esta captura',
+  exportAll: 'Exportar todas las capturas',
+  saveProject: 'Guardar proyecto (.zip)',
   exporting: 'Exportando…',
-  reset: 'Restablecer la plantilla',
+  savingProject: 'Guardando el proyecto…',
+  loadProject: 'Abrir proyecto…',
+  loadingProject: 'Abriendo el proyecto…',
+  loadProjectTitle: '¿Abrir este proyecto?',
+  loadProjectBody: 'Reemplaza todas las capturas de todos los dispositivos por las del archivo. Tu trabajo actual no está guardado en ningún otro sitio.',
+  loadErrorUnreadable: 'No se ha podido leer el archivo. Puede estar dañado o no ser un archivo zip.',
+  loadErrorNotAProject: 'Ese zip no es un proyecto de Screenshot Studio.',
+  loadErrorTooNew: 'Ese proyecto se guardó con una versión más reciente de esta aplicación.',
+  deleteAll: 'Eliminar todo',
+  deleteAllTitle: '¿Eliminar todo?',
+  deleteAllBody: 'Se eliminarán todas las capturas de todos los dispositivos y todo lo guardado en este navegador. Esto no se puede deshacer.',
+  deleteAllSave: 'Guardar el proyecto y eliminar',
+  deleteAllConfirm: 'Eliminar sin guardar',
+  cancel: 'Cancelar',
+  saveFailed: 'No se ha podido guardar el proyecto, así que no se ha eliminado nada.',
+  storageFull: 'Este navegador se ha quedado sin espacio, así que tus imágenes ya no se guardan. Libera espacio o guarda tu proyecto en un archivo.',
 
   aboutTitle: 'Acerca de este sitio',
   closeInfo: 'Cerrar la información',
@@ -71,9 +88,9 @@ export const es: Dict = {
     'Añade hasta 10 capturas por dispositivo con el + bajo la vista previa y cambia entre ellas con los círculos numerados. Cada una conserva su imagen, su texto, sus colores y su tipografía.',
   step6Title: 'Exporta.',
   step6Body:
-    'La vista previa es el lienzo real a resolución completa, así que el PNG que descargas es exactamente lo que ves. Exporta la captura que tienes delante o todo el conjunto de una vez.',
+    'La vista previa es el lienzo real a resolución completa, así que el PNG que descargas es exactamente lo que ves. Exporta la captura en la que estás, todas las capturas de todos los dispositivos a la vez, o guarda el proyecto entero en un .zip que podrás volver a abrir.',
 
   modalFootnote:
-    'Tus ajustes se guardan en este navegador y se restauran la próxima vez. Las imágenes no: vuelve a soltarlas tras recargar.',
+    'Tu trabajo se guarda en este navegador —imágenes incluidas— y se restaura la próxima vez. No se sube nada a ningún sitio.',
   gotIt: 'Entendido',
 }

@@ -22,6 +22,7 @@
  *        node scripts/verify-frames.mjs
  */
 import puppeteer from 'puppeteer-core'
+import { clearProjects } from './storage.mjs'
 
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 const URL = 'http://localhost:5173/'
@@ -71,6 +72,7 @@ for (const device of DEVICES) {
   // Select the device through the real control, then reload so the app starts on it: that
   // also proves the choice is persisted, which is how a user gets back to it.
   await page.select('[data-device-select]', device.id)
+  await clearProjects(page)
   await page.reload({ waitUntil: 'networkidle0' })
 
   const selected = await page.$eval('[data-device-select]', (el) => el.value)
@@ -193,6 +195,7 @@ const dropZoneName = () =>
   page.$eval('div[class*="border-dashed"]', (el) => el.textContent)
 
 await page.evaluate(() => localStorage.removeItem('screenshot-studio:device'))
+await clearProjects(page)
 await page.reload({ waitUntil: 'networkidle0' })
 
 // The iPhone gets a screenshot; the iPad has never been given one.
