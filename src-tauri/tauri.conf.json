@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "Screenshot Studio",
   "version": "1.0.0",
-  "identifier": "fyi.aymeric.screenshot-studio",
+  "identifier": "com.aym3r1c.screenshot-studio",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
