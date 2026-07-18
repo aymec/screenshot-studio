@@ -1,10 +1,10 @@
 [package]
 name = "screenshot-studio"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+version = "1.0.0"
+description = "Create App Store and Google Play marketing screenshots: frame a phone capture, add a highlighted caption, and export store-ready PNGs."
+authors = ["Aymeric Chalochet"]
+license = "MIT"
+repository = "https://github.com/aymec/screenshot-studio"
 edition = "2021"
 rust-version = "1.77.2"
 
