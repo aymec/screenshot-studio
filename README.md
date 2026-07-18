@@ -2,8 +2,8 @@
 
 A fully client-side generator for marketing screenshots for the Apple App Store and the Google Play
 Store. Drop a raw phone screenshot into a device frame, write a caption with one word picked out in
-a highlight color, and export a ready-to-upload PNG. No backend, no account — nothing ever leaves
-the browser.
+a highlight color, and export a ready-to-upload PNG. It runs both in the browser and as a native
+macOS desktop app. No backend, no account — nothing ever leaves your machine.
 
 Live at [screenshot-studio.aymeric.fyi](https://screenshot-studio.aymeric.fyi).
 
@@ -116,9 +116,8 @@ leaves the machine. `src-tauri/` is the whole of the native side; `src/` is unto
 
 Two things beyond the web toolchain are needed to build it:
 
-- **Rust**, installed via [rustup](https://rustup.rs) — not Homebrew, because Tauri relies on
-  rustup managing the toolchain. Cargo compiles the native shell; it is a build-time dependency and
-  is never shipped to users.
+- **Rust**, installed via [rustup](https://rustup.rs). Cargo compiles the native shell; it is a
+  build-time dependency and is never shipped to users.
 - **Xcode** (or at least its command-line tools) for the macOS SDK, code signing, and notarization.
 
 The Tauri CLI itself is already a dev dependency, so `npm install` pulls it in. Then:
