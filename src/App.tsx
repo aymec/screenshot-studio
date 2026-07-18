@@ -335,7 +335,7 @@ export default function App() {
 
   const handleExport = useCallback(() => {
     if (canvasRef.current) {
-      exportPng(canvasRef.current, filename(design, preset.id, index + 1))
+      void exportPng(canvasRef.current, filename(design, preset.id, index + 1))
     }
   }, [design, preset.id, index])
 
@@ -360,6 +360,7 @@ export default function App() {
     // the preview flip through every device with nothing to explain why.
     await new Promise(requestAnimationFrame)
 
+    let archive: Blob | null = null
     try {
       const entries = []
       for (const p of PRESETS) {
@@ -389,42 +390,55 @@ export default function App() {
       canvas.height = preset.canvas.h
       render(ctx, { preset, design, screenshot: slide.shot?.img ?? null, frame })
 
-      if (entries.length) download(zip(entries), 'screenshots.zip')
+      if (entries.length) archive = zip(entries)
     } finally {
       // Even if a screenshot fails to encode, the app must not be left behind the overlay.
       setBusy(null)
     }
+    // Raise the save panel (in the desktop app) only after the overlay is gone, not behind it.
+    if (archive) await download(archive, 'screenshots.zip')
   }, [decks, preset, frame, design, slide])
 
   // The project as a file: one zip holding a manifest and every image, across every device. The
   // database survives a reload; this survives the browser — it can be backed up, moved to another
   // machine, or handed to someone else.
   //
-  // It throws rather than swallowing a failure, because one caller deletes the user's work as soon
-  // as this returns. A save that quietly did nothing would take the project with it.
-  const writeProjectFile = useCallback(() => {
+  // Building is kept separate from writing so the (synchronous, fast) build runs under the busy
+  // overlay while the OS save panel that follows does not. It throws rather than swallowing a
+  // failure, because one caller deletes the user's work once the save that follows succeeds — a
+  // build that quietly produced nothing would take the project with it.
+  const buildProject = useCallback((): { blob: Blob; name: string } => {
     const entries = toZip(decks, cursors, deviceId, PROJECT_NAME)
     // The user's own date, not UTC's: saving late in the evening east of Greenwich would
     // otherwise stamp the file with yesterday.
     const now = new Date()
     const pad = (n: number) => String(n).padStart(2, '0')
     const day = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
-    download(zip(entries), `screenshot-studio-project-${day}.zip`)
+    return { blob: zip(entries), name: `screenshot-studio-project-${day}.zip` }
   }, [decks, cursors, deviceId])
 
   const handleSaveProject = useCallback(async () => {
     setSaveFailed(false)
     setBusy('save')
     await new Promise(requestAnimationFrame)
+    let project: { blob: Blob; name: string }
     try {
-      writeProjectFile()
+      project = buildProject()
     } catch (e) {
       console.error(e)
       setSaveFailed(true)
+      return
     } finally {
       setBusy(null)
     }
-  }, [writeProjectFile])
+    // Writing is its own step, after the overlay: a dismissed save panel just means no file.
+    try {
+      await download(project.blob, project.name)
+    } catch (e) {
+      console.error(e)
+      setSaveFailed(true)
+    }
+  }, [buildProject])
 
   // Opening a project throws away everything currently on every device, so it is asked about
   // first. The file is held until the answer comes back.
@@ -486,8 +500,9 @@ export default function App() {
     setSaveFailed(false)
     setBusy('save')
     await new Promise(requestAnimationFrame)
+    let project: { blob: Blob; name: string }
     try {
-      writeProjectFile()
+      project = buildProject()
     } catch (e) {
       console.error(e)
       // Close the dialog on the way out, or the message explaining what went wrong is behind it.
@@ -497,8 +512,20 @@ export default function App() {
     } finally {
       setBusy(null)
     }
+    let saved: boolean
+    try {
+      saved = await download(project.blob, project.name)
+    } catch (e) {
+      console.error(e)
+      setConfirmDeleteAll(false)
+      setSaveFailed(true)
+      return
+    }
+    // In the desktop app the save panel can be dismissed: that is neither a failure nor a save, so
+    // keep everything and leave the confirmation up for the user to choose how to leave.
+    if (!saved) return
     deleteEverything()
-  }, [writeProjectFile, deleteEverything])
+  }, [buildProject, deleteEverything])
 
   return (
     <div className="flex h-full bg-slate-100 font-sans text-slate-900 dark:bg-slate-950 dark:text-slate-100">

@@ -198,16 +198,49 @@ export function toPng(canvas: HTMLCanvasElement): Promise<Blob | null> {
   return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
 }
 
-export function download(blob: Blob, filename: string) {
+/** True when running inside the Tauri desktop shell rather than a browser tab. */
+function inTauri(): boolean {
+  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+}
+
+/**
+ * Write a blob to disk. In a browser this is an anchor download — the browser decides where the
+ * file lands (usually Downloads, silently). The Tauri desktop shell has no browser download chrome,
+ * so instead we raise the OS save panel and write the chosen path ourselves, which is also what
+ * lets the user pick a location the way they can on the web.
+ *
+ * Returns whether a file was actually written: the save panel can be dismissed, and a caller that
+ * gates a destructive step (delete-all) on a successful save must be able to tell a cancel apart
+ * from a completed write. A real write failure throws — that same caller must not delete on it.
+ */
+export async function download(blob: Blob, filename: string): Promise<boolean> {
+  if (inTauri()) return saveInTauri(blob, filename)
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
   a.download = filename
   a.click()
   URL.revokeObjectURL(url)
+  return true
+}
+
+async function saveInTauri(blob: Blob, filename: string): Promise<boolean> {
+  // Loaded lazily so the plugins are never bundled into the browser build's startup path.
+  const [{ save }, { writeFile }] = await Promise.all([
+    import('@tauri-apps/plugin-dialog'),
+    import('@tauri-apps/plugin-fs'),
+  ])
+  const ext = filename.includes('.') ? filename.slice(filename.lastIndexOf('.') + 1) : ''
+  const path = await save({
+    defaultPath: filename,
+    filters: ext ? [{ name: ext.toUpperCase(), extensions: [ext] }] : [],
+  })
+  if (!path) return false // the user dismissed the save panel
+  await writeFile(path, new Uint8Array(await blob.arrayBuffer()))
+  return true
 }
 
 export async function exportPng(canvas: HTMLCanvasElement, filename: string) {
   const blob = await toPng(canvas)
-  if (blob) download(blob, filename)
+  if (blob) await download(blob, filename)
 }
